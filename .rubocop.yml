@@ -1,0 +1,68 @@
+AllCops:
+  Exclude:
+    - 'Rakefile'
+    - 'Guardfile'
+    - '*.gemspec'
+    - 'bin/**/*'
+    - 'db/**/*'
+    - 'config/**/*'
+
+# Configuration parameters: CountComments.
+Metrics/MethodLength:
+  Max: 20
+
+# Configuration parameters: EnforcedStyle, SupportedStyles, ProceduralMethods, FunctionalMethods, IgnoredMethods.
+Style/BlockDelimiters:
+  Exclude:
+    - 'spec/**/*'
+
+# Cop supports --auto-correct.
+Style/BlockEndNewline:
+  Exclude:
+    - 'spec/**/*'
+
+# Cop supports --auto-correct.
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+Style/BracesAroundHashParameters:
+  Enabled: false
+
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
+
+Style/DoubleNegation:
+  Enabled: false
+
+# Configuration parameters: MinBodyLength.
+Style/GuardClause:
+  Enabled: false
+
+# Cop supports --auto-correct.
+# Configuration parameters: MaxLineLength.
+Style/IfUnlessModifier:
+  Enabled: false
+
+# Cop supports --auto-correct.
+Style/Lambda:
+  Enabled: false
+
+# Cop supports --auto-correct.
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+Style/MethodDefParentheses:
+  EnforcedStyle: require_no_parentheses
+
+# Cop supports --auto-correct.
+Style/MultilineBlockLayout:
+  Exclude:
+    - 'spec/**/*'
+
+# Cop supports --auto-correct.
+Style/SingleSpaceBeforeFirstArg:
+  Enabled: false
+
+# Cop supports --auto-correct.
+Style/SpecialGlobalVars:
+  Enabled: false

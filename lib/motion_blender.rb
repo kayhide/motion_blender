@@ -1,4 +1,4 @@
-require "motion_blender/version"
+require 'motion_blender/version'
 
 module MotionBlender
   # Your code goes here...
