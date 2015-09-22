@@ -4,8 +4,8 @@ SimpleCov.start 'gem'
 
 ENV['RUBYMOTION_ENV'] ||= 'test'
 
-require 'bundler'
-Bundler.require :test
+require 'pry'
+require 'pry-doc'
 
 require 'motion_blender'
 

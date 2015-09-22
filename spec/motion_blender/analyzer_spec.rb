@@ -13,20 +13,9 @@ describe MotionBlender::Analyzer do
       foo = fixtures_dir.join('lib/foo.rb').to_s
       bar = fixtures_dir.join('lib/bar.rb').to_s
 
-      expect(@analyzer.requires[src]).to eq %w(foo)
-      expect(@analyzer.requires[foo]).to eq %w(bar)
-      expect(@analyzer.requires[bar]).to eq nil
-    end
-
-    it 'captures requires' do
-      src = fixtures_dir.join('foo_loader.rb').to_s
-      @analyzer.analyze src
-      foo = fixtures_dir.join('lib/foo.rb').to_s
-      bar = fixtures_dir.join('lib/bar.rb').to_s
-
-      expect(@analyzer.requires[src]).to eq %w(foo)
-      expect(@analyzer.requires[foo]).to eq %w(bar)
-      expect(@analyzer.requires[bar]).to eq nil
+      expect(@analyzer.dependencies[src]).to eq [foo]
+      expect(@analyzer.dependencies[foo]).to eq [bar]
+      expect(@analyzer.dependencies[bar]).to eq nil
     end
 
     it 'works with circular require' do
@@ -34,20 +23,13 @@ describe MotionBlender::Analyzer do
       @analyzer.analyze src
       circular = fixtures_dir.join('lib/circular.rb').to_s
 
-      expect(@analyzer.requires[src]).to eq %w(circular)
-      expect(@analyzer.requires[circular]).to eq %w(circular)
-    end
-
-    it 'works with undefined constant' do
-      src = fixtures_dir.join('undefined_loader.rb').to_s
-      expect {
-        @analyzer.analyze src
-      }.not_to raise_error
+      expect(@analyzer.dependencies[src]).to eq [circular]
+      expect(@analyzer.dependencies[circular]).to eq [circular]
     end
   end
 
   describe '#files' do
-    it 'returns all required files' do
+    it 'returns parsing file and all required files' do
       src = fixtures_dir.join('foo_loader.rb').to_s
       @analyzer.analyze src
       foo = fixtures_dir.join('lib/foo.rb').to_s
@@ -62,17 +44,15 @@ describe MotionBlender::Analyzer do
 
       expect(@analyzer.files).to eq []
     end
-  end
 
-  describe '#create_dependencies' do
-    it 'creates dependencies' do
-      src = fixtures_dir.join('foo_loader.rb').to_s
-      foo = fixtures_dir.join('lib/foo.rb').to_s
-      allow(@analyzer).to receive(:files) { [src, foo] }
-      allow(@analyzer).to receive(:requires) { { src => %w(foo) } }
+    it 'preserves relative path' do
+      dir = './spec/fixtures'
+      src = File.join(dir, 'relative_loader.rb')
+      @analyzer.analyze src
+      foo = File.join(dir, 'lib/foo.rb')
+      bar = fixtures_dir.join('lib/bar.rb').to_s
 
-      @analyzer.create_dependencies
-      expect(@analyzer.dependencies[src]).to eq [foo]
+      expect(@analyzer.files).to eq [src, foo, bar]
     end
   end
 end

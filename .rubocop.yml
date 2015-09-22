@@ -7,6 +7,10 @@ AllCops:
     - 'db/**/*'
     - 'config/**/*'
 
+Lint/Eval:
+  Exclude:
+    - 'lib/motion_blender/analyzer/parser.rb'
+
 # Configuration parameters: CountComments.
 Metrics/MethodLength:
   Max: 20
