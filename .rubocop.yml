@@ -11,6 +11,9 @@ AllCops:
 Metrics/MethodLength:
   Max: 20
 
+Metrics/AbcSize:
+  Max: 25
+
 # Configuration parameters: EnforcedStyle, SupportedStyles, ProceduralMethods, FunctionalMethods, IgnoredMethods.
 Style/BlockDelimiters:
   Exclude:
