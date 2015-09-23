@@ -10,3 +10,10 @@ Module.new do
 
   Object.send :include, self
 end
+
+module MotionBlender
+  module_function
+
+  def add _
+  end
+end

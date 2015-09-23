@@ -14,8 +14,16 @@ module MotionBlender
 
       if analyzer.files.any?
         app.exclude_from_detect_dependencies += [ext_file, *analyzer.files]
-        app.files.unshift [ext_file, *(analyzer.files - app.files)]
+        app.files = [ext_file, *(analyzer.files - app.files), *app.files]
         app.files_dependencies analyzer.dependencies
+      end
+    end
+  end
+
+  def add file
+    if defined?(Motion::Project::Config)
+      Motion::Project::App.setup do |app|
+        app.files.unshift file
       end
     end
   end
