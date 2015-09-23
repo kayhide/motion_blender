@@ -1,5 +1,6 @@
 require 'motion_blender/version'
 require 'motion_blender/analyzer'
+require 'motion_blender/rake_tasks'
 
 module MotionBlender
   module_function
