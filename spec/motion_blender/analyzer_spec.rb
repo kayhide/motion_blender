@@ -54,5 +54,23 @@ describe MotionBlender::Analyzer do
 
       expect(@analyzer.files).to eq [src, foo, bar]
     end
+
+    it 'excludes analyzing files in exclude_files' do
+      src = fixtures_dir.join('foo_loader.rb').to_s
+      @analyzer.exclude_files << src
+      @analyzer.analyze src
+
+      expect(@analyzer.files).to match_array []
+    end
+
+    it 'excludes required files in exclude_files' do
+      src = fixtures_dir.join('foo_loader.rb').to_s
+      foo = fixtures_dir.join('lib/foo.rb').to_s
+      bar = fixtures_dir.join('lib/bar.rb').to_s
+      @analyzer.exclude_files << bar
+      @analyzer.analyze src
+
+      expect(@analyzer.files).to match_array [src, foo]
+    end
   end
 end

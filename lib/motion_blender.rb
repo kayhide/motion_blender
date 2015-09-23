@@ -7,6 +7,7 @@ module MotionBlender
   def analyze
     Motion::Project::App.setup do |app|
       analyzer = Analyzer.new
+      analyzer.exclude_files = Dir[File.expand_path('../**/*.rb', __FILE__)]
       app.files.flatten.each do |file|
         analyzer.analyze file
       end
