@@ -98,7 +98,7 @@ require File.expand_path('../otherthing', __FILE__) # __FILE__ works properly
 Dir.glob('lib/**/*.rb').each { |path| require path }
 ```
 
-And must exists required file:
+And required files must exist:
 
 ```ruby
 # Bad
