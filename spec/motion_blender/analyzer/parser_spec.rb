@@ -32,20 +32,6 @@ describe MotionBlender::Analyzer::Parser do
       }.to raise_error { |error|
         expect(error).to be_a LoadError
         expect(error.message).to include 'require invalid'
-        expect(error.backtrace.first).to include "#{src}:1"
-      }
-    end
-
-    it 'fails when require arg is invalid' do
-      src = fixtures_dir.join('invalid_loader.rb').to_s
-      parser = MotionBlender::Analyzer::Parser.new(src)
-
-      expect {
-        parser.parse
-      }.to raise_error { |error|
-        expect(error).to be_a LoadError
-        expect(error.message).to include 'require invalid'
-        expect(error.backtrace.first).to include "#{src}:1"
       }
     end
 
@@ -58,7 +44,6 @@ describe MotionBlender::Analyzer::Parser do
       }.to raise_error { |error|
         expect(error).to be_a LoadError
         expect(error.message).to include 'missing_feature'
-        expect(error.backtrace.first).to include "#{src}:1"
       }
     end
   end

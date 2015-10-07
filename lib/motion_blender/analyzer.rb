@@ -9,27 +9,32 @@ module MotionBlender
 
     def initialize
       @analyzed_files = Set.new
+      @exclude_files = Set.new
       @files = []
       @dependencies = {}
-      @exclude_files = []
     end
 
-    def analyze file
+    def analyze file, backtrace = []
       return if @exclude_files.include? file
       return if @analyzed_files.include? file
       @analyzed_files << file
 
       parser = Parser.new file
-      parser.parse
-      parser.requires.reject! do |req|
+      begin
+        parser.parse
+      rescue LoadError => err
+        err.set_backtrace [parser.last_trace, *backtrace].compact
+        raise err
+      end
+      requires = parser.requires.reject do |req|
         @exclude_files.include? req.file
       end
 
-      if parser.requires.any?
-        @dependencies[file] = parser.requires.map(&:file)
+      if requires.any?
+        @dependencies[file] = requires.map(&:file)
         @files = (@files + [file] + @dependencies[file]).uniq
-        @dependencies[file].each do |f|
-          analyze f
+        requires.each do |req|
+          analyze req.file, [req.trace, *backtrace]
         end
       end
     end

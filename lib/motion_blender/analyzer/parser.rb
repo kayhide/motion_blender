@@ -6,9 +6,9 @@ module MotionBlender
     class Parser
       REQUIREMENT_TOKENS = %i(motion_require require_relative require)
 
-      Require = Struct.new(:loader, :method, :arg, :file)
+      Require = Struct.new(:loader, :method, :arg, :file, :trace)
 
-      attr_reader :file, :requires
+      attr_reader :file, :requires, :last_trace
 
       def initialize file
         @file = file.to_s
@@ -22,16 +22,16 @@ module MotionBlender
 
       def traverse ast
         if ast && ast.type == :send && require_command?(ast)
+          @last_trace = trace_for ast
           req = parse_arg ast
           req.file = resolve_path req.method, req.arg
+          req.trace = @last_trace
           @requires << req
         elsif ast
           ast.children
             .select { |node| node.is_a?(::Parser::AST::Node) }
             .each { |node| traverse node }
         end
-      rescue LoadError => err
-        raise err, err.message, [trace_for(ast), *caller]
       end
 
       def require_command? ast
@@ -44,7 +44,7 @@ module MotionBlender
         Require.new(@file, ast.children[1], arg)
       rescue
         exp = ast.loc.expression.source
-        raise LoadError, "failed to parse `#{exp}'", caller(1)
+        raise LoadError, "failed to parse `#{exp}'"
       end
 
       def trace_for ast

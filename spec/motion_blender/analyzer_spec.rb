@@ -26,6 +26,20 @@ describe MotionBlender::Analyzer do
       expect(@analyzer.dependencies[src]).to eq [circular]
       expect(@analyzer.dependencies[circular]).to eq [circular]
     end
+
+    it 'raises error with backtrace' do
+      loaders = (0..2).map { |i|
+        fixtures_dir.join("error_loader_#{i}.rb").to_s
+      }
+
+      expect {
+        @analyzer.analyze loaders.last
+      }.to raise_error { |error|
+        expect(error.backtrace[0]).to include "#{loaders[0]}:1"
+        expect(error.backtrace[1]).to include "#{loaders[1]}:1"
+        expect(error.backtrace[2]).to include "#{loaders[2]}:1"
+      }
+    end
   end
 
   describe '#files' do
