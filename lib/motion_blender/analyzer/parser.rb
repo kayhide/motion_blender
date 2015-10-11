@@ -40,7 +40,8 @@ module MotionBlender
 
       def parse_arg ast
         arg_ast = ast.children[2]
-        arg = eval arg_ast.loc.expression.source, clean_binding, @file
+        clean_room = BasicObject.new
+        arg = clean_room.instance_eval(arg_ast.loc.expression.source, @file)
         Require.new(@file, ast.children[1], arg)
       rescue
         exp = ast.loc.expression.source
@@ -49,10 +50,6 @@ module MotionBlender
 
       def trace_for ast
         "#{@file}:#{ast.loc.line}:in `#{ast.children[1]}'"
-      end
-
-      def clean_binding
-        binding
       end
 
       def resolve_path method, arg
