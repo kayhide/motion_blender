@@ -1,6 +1,8 @@
 require 'parser/current'
 require 'pathname'
 
+require 'motion_blender/analyzer/evaluator'
+
 module MotionBlender
   class Analyzer
     class Parser
@@ -20,32 +22,24 @@ module MotionBlender
         traverse ast
       end
 
-      def traverse ast
+      def traverse ast, stack = []
         if ast && ast.type == :send && require_command?(ast)
           @last_trace = trace_for ast
-          req = parse_arg ast
-          req.file = resolve_path req.method, req.arg
-          req.trace = @last_trace
-          @requires << req
+          Evaluator.new(@file, ast, stack).parse_args.each do |arg|
+            req = Require.new(@file, ast.children[1], arg)
+            req.file = resolve_path req.method, req.arg
+            req.trace = @last_trace
+            @requires << req
+          end
         elsif ast
           ast.children
             .select { |node| node.is_a?(::Parser::AST::Node) }
-            .each { |node| traverse node }
+            .each { |node| traverse node, stack + [ast] }
         end
       end
 
       def require_command? ast
         REQUIREMENT_TOKENS.include?(ast.children[1])
-      end
-
-      def parse_arg ast
-        arg_ast = ast.children[2]
-        clean_room = BasicObject.new
-        arg = clean_room.instance_eval(arg_ast.loc.expression.source, @file)
-        Require.new(@file, ast.children[1], arg)
-      rescue
-        exp = ast.loc.expression.source
-        raise LoadError, "failed to parse `#{exp}'"
       end
 
       def trace_for ast
