@@ -102,7 +102,7 @@ Dir.glob('lib/**/*.rb').each { |path| require path }
 Dir[File.dirname(__FILE__) + '/lib/*.rb'].each { |file| require file }
 ```
 
-Required Files must exist:
+Required files must exist:
 
 ```ruby
 # Bad
