@@ -21,8 +21,11 @@ module MotionBlender
     end
   end
 
-  def add file
+  def add file = nil
     if defined?(Motion::Project::Config)
+      unless file
+        file = caller.first.split(':', 2).first
+      end
       Motion::Project::App.setup do |app|
         app.files.unshift file
       end
