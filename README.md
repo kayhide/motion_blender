@@ -92,13 +92,17 @@ The argument must be a string or an eval-able expression:
 require 'something'
 require File.join('path', 'to', 'feature')
 require File.expand_path('../otherthing', __FILE__) # __FILE__ works properly
-
-# Bad
-# analyzer does not eval outside of require method
-Dir.glob('lib/**/*.rb').each { |path| require path }
 ```
 
-And required files must exist:
+Wrapped in outer loop, works fine:
+
+```ruby
+# Good
+Dir.glob('lib/**/*.rb').each { |path| require path }
+Dir[File.dirname(__FILE__) + '/lib/*.rb'].each { |file| require file }
+```
+
+Required Files must exist:
 
 ```ruby
 # Bad
