@@ -29,6 +29,15 @@ module MotionBlender
     end
   end
 
+  def use_motion_dir dir = nil
+    unless dir
+      file = caller.first.split(':', 2).first
+      dir = File.expand_path('../../motion', file)
+    end
+    $LOAD_PATH.delete dir
+    $LOAD_PATH.unshift dir
+  end
+
   def ext_file
     File.expand_path('../../motion/ext.rb', __FILE__)
   end

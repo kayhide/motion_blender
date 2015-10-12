@@ -16,4 +16,7 @@ module MotionBlender
 
   def add _
   end
+
+  def use_motion_dir _ = nil
+  end
 end
