@@ -34,7 +34,7 @@ module MotionBlender
         elsif ast
           ast.children
             .select { |node| node.is_a?(::Parser::AST::Node) }
-            .each { |node| traverse node, stack + [ast] }
+            .each { |node| traverse node, [*stack, ast] }
         end
       end
 

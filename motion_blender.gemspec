@@ -32,4 +32,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'guard-rubocop'
   spec.add_development_dependency 'simplecov'
   spec.add_development_dependency 'simplecov-gem-profile'
+  spec.add_development_dependency 'activesupport', '~> 4.2'
 end

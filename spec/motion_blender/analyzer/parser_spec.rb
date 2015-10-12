@@ -23,28 +23,13 @@ describe MotionBlender::Analyzer::Parser do
       expect(parser.requires.map(&:arg)).to eq %w(lib/foo)
     end
 
-    it 'fails when require arg is invalid' do
-      src = fixtures_dir.join('invalid_loader.rb').to_s
+    it 'captures requires in loop' do
+      src = fixtures_dir.join('all_loader.rb').to_s
       parser = MotionBlender::Analyzer::Parser.new(src)
 
-      expect {
-        parser.parse
-      }.to raise_error { |error|
-        expect(error).to be_a LoadError
-        expect(error.message).to include 'require invalid'
-      }
-    end
-
-    it 'fails when required file is missing' do
-      src = fixtures_dir.join('missing_loader.rb').to_s
-      parser = MotionBlender::Analyzer::Parser.new(src)
-
-      expect {
-        parser.parse
-      }.to raise_error { |error|
-        expect(error).to be_a LoadError
-        expect(error.message).to include 'missing_feature'
-      }
+      parser.parse
+      expect(parser.requires.map(&:arg))
+        .to eq fixtures_dir.join('lib').children.map(&:to_s)
     end
   end
 
@@ -55,6 +40,18 @@ describe MotionBlender::Analyzer::Parser do
 
       foo = fixtures_dir.join('lib/foo.rb').to_s
       expect(parser.resolve_path(:require, 'foo')).to eq foo
+    end
+
+    it 'fails when required file is missing' do
+      src = fixtures_dir.join('missing_loader.rb').to_s
+      parser = MotionBlender::Analyzer::Parser.new(src)
+
+      expect {
+        parser.resolve_path(:require, 'missing_feature')
+      }.to raise_error { |error|
+        expect(error).to be_a LoadError
+        expect(error.message).to include 'missing_feature'
+      }
     end
   end
 end

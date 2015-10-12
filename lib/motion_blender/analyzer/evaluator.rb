@@ -3,23 +3,33 @@ module MotionBlender
     class Evaluator
       attr_reader :file, :ast, :stack
 
-      def initialize file, ast, stack = []
+      def initialize file, ast, stack = [], method = nil
         @file = file
         @ast = ast
         @stack = stack
+        @method = method || @ast.children[1]
       end
 
       def parse_args
-        [parse_arg(@ast)]
+        extractor = create_extractor
+        extractor.instance_eval(@ast.loc.expression.source, @file)
+        extractor.instance_eval { @args }
+      rescue
+        if stack.any?
+          Evaluator.new(@file, stack.last, stack[0..-2], @method).parse_args
+        else
+          exp = @ast.loc.expression.source
+          raise LoadError, "failed to parse `#{exp}'"
+        end
       end
 
-      def parse_arg ast
-        arg_ast = ast.children[2]
-        clean_room = BasicObject.new
-        clean_room.instance_eval(arg_ast.loc.expression.source, @file)
-      rescue
-        exp = ast.loc.expression.source
-        raise LoadError, "failed to parse `#{exp}'"
+      def create_extractor
+        obj = Object.new
+        obj.define_singleton_method @method do |arg|
+          @args ||= []
+          @args << arg
+        end
+        obj
       end
     end
   end
