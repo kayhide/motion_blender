@@ -6,6 +6,10 @@ describe MotionBlender do
   end
 
   describe '.use_motion_dir' do
+    before do
+      allow(MotionBlender).to receive(:motion?) { true }
+    end
+
     it 'unshifts dir into $LOAD_PATH' do
       dir = fixtures_dir.join('motion').to_s
       expect($LOAD_PATH).to receive(:unshift).with(dir)

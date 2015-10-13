@@ -19,4 +19,8 @@ module MotionBlender
 
   def use_motion_dir _ = nil
   end
+
+  def motion?
+    true
+  end
 end

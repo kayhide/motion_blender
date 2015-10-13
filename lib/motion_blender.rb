@@ -23,23 +23,24 @@ module MotionBlender
   end
 
   def add file = nil
-    if defined?(Motion::Project::Config)
-      unless file
-        file = caller.first.split(':', 2).first
-      end
-      Motion::Project::App.setup do |app|
-        app.files.unshift file
-      end
+    return unless motion?
+
+    file ||= caller.first.split(':', 2).first
+    Motion::Project::App.setup do |app|
+      app.files.unshift file
     end
   end
 
   def use_motion_dir dir = nil
-    unless dir
-      file = caller.first.split(':', 2).first
-      dir = File.expand_path('../../motion', file)
-    end
+    return unless motion?
+
+    dir ||= File.expand_path('../../motion', caller.first.split(':', 2).first)
     $LOAD_PATH.delete dir
     $LOAD_PATH.unshift dir
+  end
+
+  def motion?
+    defined?(Motion::Project::Config)
   end
 
   def ext_file
