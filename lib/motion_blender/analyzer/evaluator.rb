@@ -13,7 +13,7 @@ module MotionBlender
       def parse_args
         extractor = create_extractor
         extractor.instance_eval(@ast.loc.expression.source, @file)
-        extractor.instance_eval { @args }
+        extractor.instance_eval { @args || [] }
       rescue
         if stack.any?
           Evaluator.new(@file, stack.last, stack[0..-2], @method).parse_args

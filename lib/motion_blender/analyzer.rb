@@ -20,6 +20,7 @@ module MotionBlender
       @analyzed_files << file
 
       parser = Parser.new file
+      parser.exclude_files = @exclude_files
       begin
         parser.parse
       rescue LoadError => err
@@ -27,7 +28,7 @@ module MotionBlender
         raise err
       end
 
-      requires = parser.requires.reject { |req| exclude? req }
+      requires = parser.requires
       if requires.any?
         @dependencies[file] = requires.map(&:file)
         @files = [*@files, file, *@dependencies[file]].uniq
@@ -35,12 +36,6 @@ module MotionBlender
           analyze req.file, [req.trace, *backtrace]
         end
       end
-    end
-
-    private
-
-    def exclude? require
-      (@exclude_files & [require.file, require.arg]).any?
     end
   end
 end
