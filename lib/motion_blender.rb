@@ -9,6 +9,7 @@ module MotionBlender
     Motion::Project::App.setup do |app|
       analyzer = Analyzer.new
       analyzer.exclude_files += Dir[File.expand_path('../**/*.rb', __FILE__)]
+      analyzer.exclude_files += builtin_features
       app.files.flatten.each do |file|
         analyzer.analyze file
       end
@@ -43,5 +44,9 @@ module MotionBlender
 
   def ext_file
     File.expand_path('../../motion/ext.rb', __FILE__)
+  end
+
+  def builtin_features
+    %w(bigdecimal date thread)
   end
 end

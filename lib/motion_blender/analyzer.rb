@@ -26,17 +26,21 @@ module MotionBlender
         err.set_backtrace [parser.last_trace, *backtrace].compact
         raise err
       end
-      requires = parser.requires.reject do |req|
-        @exclude_files.include? req.file
-      end
 
+      requires = parser.requires.reject { |req| exclude? req }
       if requires.any?
         @dependencies[file] = requires.map(&:file)
-        @files = (@files + [file] + @dependencies[file]).uniq
+        @files = [*@files, file, *@dependencies[file]].uniq
         requires.each do |req|
           analyze req.file, [req.trace, *backtrace]
         end
       end
+    end
+
+    private
+
+    def exclude? require
+      (@exclude_files & [require.file, require.arg]).any?
     end
   end
 end
