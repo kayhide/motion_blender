@@ -48,6 +48,6 @@ module MotionBlender
   end
 
   def builtin_features
-    %w(bigdecimal date thread)
+    %w(bigdecimal rational date thread)
   end
 end
