@@ -34,7 +34,15 @@ module MotionBlender
   def use_motion_dir dir = nil
     return unless motion?
 
-    dir ||= File.expand_path('../../motion', caller.first.split(':', 2).first)
+    unless dir
+      file = caller.first.split(':', 2).first
+      Pathname.new(file).dirname.ascend do |path|
+        if $LOAD_PATH.include?(path.to_s)
+          dir = path.dirname.join('motion').to_s
+          break
+        end
+      end
+    end
     $LOAD_PATH.delete dir
     $LOAD_PATH.unshift dir
   end

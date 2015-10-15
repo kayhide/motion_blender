@@ -1,9 +1,10 @@
 require 'spec_helper'
 
 describe MotionBlender::Analyzer do
+  use_lib_dir
+
   before do
     @analyzer = MotionBlender::Analyzer.new
-    $:.unshift fixtures_dir.join('lib')
   end
 
   describe '#analyze' do
