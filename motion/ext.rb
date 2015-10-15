@@ -23,4 +23,11 @@ module MotionBlender
   def motion?
     true
   end
+
+  def raketime &_
+  end
+
+  def runtime &proc
+    proc.call
+  end
 end

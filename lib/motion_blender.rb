@@ -43,6 +43,13 @@ module MotionBlender
     defined?(Motion::Project::Config)
   end
 
+  def raketime &proc
+    proc.call
+  end
+
+  def runtime &_
+  end
+
   def ext_file
     File.expand_path('../../motion/ext.rb', __FILE__)
   end

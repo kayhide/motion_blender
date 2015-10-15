@@ -24,7 +24,7 @@ module MotionBlender
 
       def traverse ast, stack = []
         @exclude_files ||= Set.new
-        if ast.type == :send && require_command?(ast)
+        if require_command?(ast)
           @last_trace = trace_for ast
           Evaluator.new(@file, ast, stack).parse_args.each do |arg|
             req = Require.new(@file, ast.children[1], arg)
@@ -33,7 +33,7 @@ module MotionBlender
             req.trace = @last_trace
             @requires << req
           end
-        else
+        elsif !raketime_block?(ast)
           ast.children
             .select { |node| node.is_a?(::Parser::AST::Node) }
             .each { |node| traverse node, [*stack, ast] }
@@ -41,7 +41,12 @@ module MotionBlender
       end
 
       def require_command? ast
-        REQUIREMENT_TOKENS.include?(ast.children[1])
+        (ast.type == :send) && REQUIREMENT_TOKENS.include?(ast.children[1])
+      end
+
+      def raketime_block? ast
+        (ast.type == :block) &&
+          (ast.children.first.loc.expression.source == 'MotionBlender.raketime')
       end
 
       def trace_for ast

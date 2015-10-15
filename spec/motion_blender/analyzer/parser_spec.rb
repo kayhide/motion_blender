@@ -29,5 +29,13 @@ describe MotionBlender::Analyzer::Parser do
       expect(parser.requires.map(&:arg))
         .to eq fixtures_dir.join('lib').children.map(&:to_s)
     end
+
+    it 'skips requires in MotionBlender.raketime' do
+      src = fixtures_dir.join('raketime_loader.rb').to_s
+      parser = MotionBlender::Analyzer::Parser.new(src)
+
+      parser.parse
+      expect(parser.requires).to eq []
+    end
   end
 end
