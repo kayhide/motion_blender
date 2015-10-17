@@ -24,6 +24,14 @@ module MotionBlender
     true
   end
 
+  def raketime?
+    false
+  end
+
+  def runtime?
+    true
+  end
+
   def raketime &_
   end
 
