@@ -14,10 +14,11 @@ module MotionBlender
       @dependencies = {}
     end
 
-    def analyze file, backtrace = []
+    def analyze file, backtrace = [], &proc
       return if @exclude_files.include? file
       return if @analyzed_files.include? file
       @analyzed_files << file
+      proc.call file if proc
 
       parser = Parser.new file
       parser.exclude_files = @exclude_files
@@ -33,7 +34,7 @@ module MotionBlender
         @dependencies[file] = requires.map(&:file)
         @files = [*@files, file, *@dependencies[file]].uniq
         requires.each do |req|
-          analyze req.file, [req.trace, *backtrace]
+          analyze req.file, [req.trace, *backtrace], &proc
         end
       end
     end

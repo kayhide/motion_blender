@@ -26,7 +26,7 @@ module MotionBlender
           else
             Pathname.new(arg)
           end
-        dirs = (uses_load_path? && path.relative?) ? $LOAD_PATH : ['']
+        dirs = path.relative? && load_path || ['']
         exts = path.extname.empty? ? ['', '.rb'] : ['']
         Enumerator.new do |y|
           dirs.product(exts).each do |dir, ext|
@@ -41,6 +41,12 @@ module MotionBlender
 
       def uses_load_path?
         method == :require
+      end
+
+      def load_path
+        if uses_load_path?
+          $LOAD_PATH
+        end
       end
     end
   end

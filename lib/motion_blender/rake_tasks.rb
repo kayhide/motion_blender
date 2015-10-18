@@ -1,30 +1,35 @@
 require 'rake'
+require 'motion_blender/config'
 require 'motion_blender/analyzer'
 
 module MotionBlender
   class RakeTasks
-    def analyze
-      Motion::Project::App.setup do |app|
-        analyzer = Analyzer.new
-        analyzer.exclude_files += Dir[File.expand_path('../../**/*.rb', __FILE__)]
-        analyzer.exclude_files += builtin_features
+    def config
+      MotionBlender.config
+    end
 
-        files = app.files
-        files.flatten.each do |file|
-          analyzer.analyze file
-        end
+    def analyze &proc
+      Motion::Project::App.setup do |app|
+        files = config.incepted_files + app.files
+        analyzer = analyze_files files, &proc
 
         if analyzer.files.any?
-          new_files = analyzer.files - files
-          app.exclude_from_detect_dependencies += [ext_file, *new_files]
-          app.files = [ext_file, *new_files, *app.files]
+          new_files = analyzer.files - app.files
+          app.exclude_from_detect_dependencies += new_files
+          app.files = new_files + app.files
           app.files_dependencies analyzer.dependencies
         end
       end
     end
 
-    def ext_file
-      File.expand_path('../../../motion/ext.rb', __FILE__)
+    def analyze_files files, &proc
+      analyzer = Analyzer.new
+      analyzer.exclude_files += [*builtin_features, *config.excepted_files]
+
+      files.flatten.each do |file|
+        analyzer.analyze file, &proc
+      end
+      analyzer
     end
 
     def builtin_features
@@ -36,7 +41,9 @@ end
 namespace :motion_blender do
   task :analyze do
     tasks = MotionBlender::RakeTasks.new
-    tasks.analyze
+    tasks.analyze do |file|
+      Motion::Project::App.info('Analyze', file)
+    end
   end
 end
 
