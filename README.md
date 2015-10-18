@@ -58,7 +58,7 @@ Add RubyMotion-compatible gem into your project (may be an application or a gem)
 And just call `require` from anywhare:
 
 ```ruby
-require 'rubymotion_conpatible_gem'
+require 'rubymotion_compatible_gem'
 
 # your code goes on...
 ```
@@ -68,18 +68,19 @@ Writing a gem (*motion_hoge*), this idiom is handy:
 ```ruby
 # in lib/motion_hoge.rb
 require 'motion_blender'
-MotionBlender.add __FILE__
+MotionBlender.incept
 
+require 'motion_hoge/version'
 require 'motion_hoge/simsim'
 require 'motion_hoge/mishmish'
-require 'motion_hoge/version'
 # ...
 ```
 
-This makes an app or a gem which depends on *motion_hoge* to load functionalities properly, even if it is compile-time.
+`MotionBlender.incept` adds this file to RubyMotion's `app.files` and targets for analyzing.
+To require this *motion_hoge* makes an application or a gem to load functionalities properly.
 
-As a default, `motion_blender` lib files themselves are excluded for analyzing.
-So don't worry about requiring `motion_blender` in compile target files.
+`motion_blender` itself is excepted for analyzing,
+so don't worry to require `motion_blender` in *incept*-ed files.
 
 ### Limitation
 
