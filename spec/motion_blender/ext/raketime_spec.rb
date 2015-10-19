@@ -56,8 +56,9 @@ describe MotionBlender::Ext::Raketime do
 
     it 'unshifts dir into $LOAD_PATH' do
       dir = fixtures_dir.join('motion').to_s
-      expect($LOAD_PATH).to receive(:unshift).with(dir)
-      @ext.use_motion_dir dir
+      expect {
+        @ext.use_motion_dir dir
+      }.to change(@ext.config, :motion_dirs).to eq [dir]
     end
 
     describe 'without arg' do
@@ -65,20 +66,22 @@ describe MotionBlender::Ext::Raketime do
 
       it 'detects motion dir automatically from caller path' do
         dir = fixtures_dir.join('motion').to_s
-        expect($LOAD_PATH).to receive(:unshift).with(dir)
         allow(@ext).to receive(:caller) {
           [fixtures_dir.join('lib/foo.rb').to_s + ":1:in `dummy'"]
         }
-        @ext.use_motion_dir
+        expect {
+          @ext.use_motion_dir
+        }.to change(@ext.config, :motion_dirs).to eq [dir]
       end
 
       it 'detects motion dir automatically ascending from caller path' do
         dir = fixtures_dir.join('motion').to_s
-        expect($LOAD_PATH).to receive(:unshift).with(dir)
         allow(@ext).to receive(:caller) {
           [fixtures_dir.join('lib/foo/bar/fiz/baz.rb').to_s + ":1:in `dummy'"]
         }
-        @ext.use_motion_dir
+        expect {
+          @ext.use_motion_dir
+        }.to change(@ext.config, :motion_dirs).to eq [dir]
       end
     end
   end

@@ -14,4 +14,8 @@ module MotionBlender
   def config
     @config ||= Config.new
   end
+
+  def reset_config
+    @config = nil
+  end
 end

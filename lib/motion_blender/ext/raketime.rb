@@ -27,7 +27,6 @@ module MotionBlender
         end
         unless config.motion_dirs.include? dir
           config.motion_dirs << dir
-          $LOAD_PATH.unshift dir
         end
       end
 

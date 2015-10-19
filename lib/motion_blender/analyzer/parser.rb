@@ -1,5 +1,6 @@
 require 'parser/current'
-require 'pathname'
+require 'active_support'
+require 'active_support/callbacks'
 
 require 'motion_blender/analyzer/evaluator'
 require 'motion_blender/analyzer/require'

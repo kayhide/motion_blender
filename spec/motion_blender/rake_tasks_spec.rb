@@ -14,17 +14,30 @@ describe MotionBlender::RakeTasks do
     end
   }
 
-  describe '#analyze' do
-    let(:app) {
-      Struct.new(:files, :exclude_from_detect_dependencies)
-        .new([], []).tap do |app|
-        allow(app).to receive(:files_dependencies)
-      end
-    }
+  let(:app) {
+    Struct.new(:files, :exclude_from_detect_dependencies)
+      .new([], []).tap do |app|
+      allow(app).to receive(:files_dependencies)
+    end
+  }
 
+  before do
+    config
+    analyzer
+  end
+
+  describe '#analyze' do
     before do
       stub_const('Motion::Project::App', Module.new)
       allow(Motion::Project::App).to receive(:setup).and_yield(app)
+    end
+
+    it 'adds excepted files into Analyzer#exclude_files' do
+      config.excepted_files << 'fizz' << 'bazz'
+
+      subject.analyze
+      expect(analyzer.exclude_files).to include 'fizz'
+      expect(analyzer.exclude_files).to include 'bazz'
     end
 
     it 'calls Motion::Project::App.setup' do
@@ -32,46 +45,39 @@ describe MotionBlender::RakeTasks do
       subject.analyze
     end
 
-    it 'calls analyze_files with incepted_files and app.files' do
+    it 'calls analyze with incepted_files and app.files in order' do
       config.incepted_files << 'foo' << 'bar'
       app.files << 'hoge' << 'piyo'
-      files = %w(foo bar hoge piyo)
-      expect(subject).to receive(:analyze_files).with(files) { analyzer }
+      expect(analyzer).to receive(:analyze).with('foo').ordered
+      expect(analyzer).to receive(:analyze).with('bar').ordered
+      expect(analyzer).to receive(:analyze).with('hoge').ordered
+      expect(analyzer).to receive(:analyze).with('piyo').ordered
       subject.analyze
     end
 
+    it 'calls apply with analyzer and app' do
+      allow(analyzer).to receive(:files) { %w(foo bar) }
+      expect(subject).to receive(:apply).with(analyzer, app)
+      subject.analyze
+    end
+
+    it 'skips apply when analyzer files is empty' do
+      allow(analyzer).to receive(:files) { [] }
+      expect(subject).not_to receive(:apply)
+      subject.analyze
+    end
+  end
+
+  describe '#apply' do
     it 'updates app with analyzer files and dependencies' do
       app.files << 'foo'
       allow(analyzer).to receive(:files) { %w(foo bar) }
       allow(analyzer).to receive(:dependencies) { { 'foo' => %w(bar) } }
-      allow(subject).to receive(:analyze_files) { analyzer }
       expect(app).to receive(:files_dependencies) { { 'foo' => %w(bar) } }
-      subject.analyze
+      subject.apply analyzer, app
 
       expect(app.files).to eq %w(bar foo)
       expect(app.exclude_from_detect_dependencies).to eq %w(bar)
-    end
-  end
-
-  describe '#analyze_files' do
-    it 'calls Analyzer#analyze for each files' do
-      expect(analyzer).to receive(:analyze).with('foo').ordered
-      expect(analyzer).to receive(:analyze).with('bar').ordered
-      subject.analyze_files %w(foo bar)
-    end
-
-    it 'adds excepted files into Analyzer#exclude_files' do
-      allow(analyzer).to receive(:analyze)
-      config.excepted_files << 'fizz' << 'bazz'
-
-      subject.analyze_files %w(foo bar)
-      expect(analyzer.exclude_files).to include 'fizz'
-      expect(analyzer.exclude_files).to include 'bazz'
-    end
-
-    it 'returns created analyzer' do
-      allow(analyzer).to receive(:analyze)
-      expect(subject.analyze_files([])).to eq analyzer
     end
   end
 end

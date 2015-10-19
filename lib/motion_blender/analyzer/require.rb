@@ -1,3 +1,6 @@
+require 'active_support'
+require 'active_support/callbacks'
+
 module MotionBlender
   class Analyzer
     class Require
@@ -48,7 +51,7 @@ module MotionBlender
 
       def load_path
         if uses_load_path?
-          $LOAD_PATH
+          MotionBlender.config.motion_dirs + $LOAD_PATH
         end
       end
 
