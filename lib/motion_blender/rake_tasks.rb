@@ -8,10 +8,10 @@ module MotionBlender
       MotionBlender.config
     end
 
-    def analyze &proc
+    def analyze
       Motion::Project::App.setup do |app|
         files = config.incepted_files + app.files
-        analyzer = analyze_files files, &proc
+        analyzer = analyze_files files
 
         if analyzer.files.any?
           new_files = analyzer.files - app.files
@@ -22,12 +22,12 @@ module MotionBlender
       end
     end
 
-    def analyze_files files, &proc
+    def analyze_files files
       analyzer = Analyzer.new
       analyzer.exclude_files += [*builtin_features, *config.excepted_files]
 
       files.flatten.each do |file|
-        analyzer.analyze file, &proc
+        analyzer.analyze file
       end
       analyzer
     end
@@ -40,10 +40,10 @@ end
 
 namespace :motion_blender do
   task :analyze do
-    tasks = MotionBlender::RakeTasks.new
-    tasks.analyze do |file|
-      Motion::Project::App.info('Analyze', file)
+    MotionBlender.on_parse do |parser|
+      Motion::Project::App.info('Analyze', parser.file)
     end
+    MotionBlender::RakeTasks.new.analyze
   end
 end
 

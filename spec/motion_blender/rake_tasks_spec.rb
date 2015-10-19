@@ -40,15 +40,6 @@ describe MotionBlender::RakeTasks do
       subject.analyze
     end
 
-    it 'calls analyze_files with given block' do
-      proc = proc {}
-      expect(subject).to receive(:analyze_files) { |_, &p|
-        expect(p).to eq proc
-        analyzer
-      }
-      subject.analyze(&proc)
-    end
-
     it 'updates app with analyzer files and dependencies' do
       app.files << 'foo'
       allow(analyzer).to receive(:files) { %w(foo bar) }
@@ -88,6 +79,10 @@ end
 describe 'analyze task' do
   let(:task) { Rake::Task['motion_blender:analyze'] }
 
+  before do
+    allow_any_instance_of(MotionBlender::RakeTasks).to receive(:analyze)
+  end
+
   it 'exists' do
     expect(task).to be_a Rake::Task
   end
@@ -97,9 +92,9 @@ describe 'analyze task' do
     task.execute
   end
 
-  it 'calls Motion::Project::App.info in block' do
-    allow_any_instance_of(MotionBlender::RakeTasks)
-      .to receive(:analyze) { |&p| p.call 'foo' }
+  it 'calls Motion::Project::App.info on parse' do
+    parser = double(file: 'foo')
+    allow(MotionBlender).to receive(:on_parse) { |&p| p.call parser }
     stub_const('Motion::Project::App', Module.new)
     expect(Motion::Project::App).to receive(:info).with('Analyze', 'foo')
     task.execute

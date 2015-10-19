@@ -7,6 +7,9 @@ require 'motion_blender/analyzer/require'
 module MotionBlender
   class Analyzer
     class Parser
+      include ActiveSupport::Callbacks
+      define_callbacks :parse
+
       REQUIREMENT_TOKENS = %i(motion_require require_relative require)
 
       attr_reader :file, :requires, :last_trace
