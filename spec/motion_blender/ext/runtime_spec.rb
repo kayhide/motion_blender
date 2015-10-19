@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'motion_blender/ext/runtime'
+require Bundler.root.join('motion/motion_blender/ext/runtime')
 
 describe MotionBlender::Ext::Runtime do
   before do

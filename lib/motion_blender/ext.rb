@@ -1,6 +1,4 @@
 MotionBlender.incept
+MotionBlender.use_motion_dir
 
-MotionBlender.runtime do
-  require 'motion_blender/ext/runtime'
-  require 'motion_blender/ext/require_suppressor'
-end
+require 'motion_blender/ext'
