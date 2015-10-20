@@ -11,20 +11,22 @@ module MotionBlender
     def analyze
       analyzer = Analyzer.new
       analyzer.exclude_files += builtin_features + config.excepted_files
-      Motion::Project::App.setup do |app|
-        files = config.incepted_files + app.files
-        files.flatten.each do |file|
-          analyzer.analyze file
-        end
-        apply analyzer, app if analyzer.files.any?
+
+      files = config.incepted_files + Motion::Project::App.config.files
+      files.flatten.each do |file|
+        analyzer.analyze file
       end
+      apply analyzer
     end
 
-    def apply analyzer, app
-      new_files = analyzer.files - app.files
-      app.exclude_from_detect_dependencies += new_files
-      app.files = new_files + app.files
-      app.files_dependencies analyzer.dependencies
+    def apply analyzer
+      Motion::Project::App.setup do |app|
+        new_files = analyzer.files - app.files
+        app.exclude_from_detect_dependencies += new_files
+        app.files = new_files + app.files
+        app.files -= app.spec_files
+        app.files_dependencies analyzer.dependencies
+      end
     end
 
     def builtin_features

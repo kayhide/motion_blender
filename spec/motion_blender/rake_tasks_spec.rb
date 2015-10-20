@@ -2,11 +2,7 @@ require 'spec_helper'
 require 'motion_blender/rake_tasks'
 
 describe MotionBlender::RakeTasks do
-  let(:config) {
-    MotionBlender::Config.new.tap do |config|
-      allow(subject).to receive(:config) { config }
-    end
-  }
+  let(:config) { MotionBlender.config }
 
   let(:analyzer) {
     MotionBlender::Analyzer.new.tap do |analyzer|
@@ -15,21 +11,23 @@ describe MotionBlender::RakeTasks do
   }
 
   let(:app) {
-    Struct.new(:files, :exclude_from_detect_dependencies)
-      .new([], []).tap do |app|
+    Struct.new(:files, :spec_files, :exclude_from_detect_dependencies)
+      .new([], [], []).tap do |app|
       allow(app).to receive(:files_dependencies)
     end
   }
 
   before do
-    config
-    analyzer
+    MotionBlender.reset_config
+    stub_const('Motion::Project::App', Module.new)
+    allow(Motion::Project::App).to receive(:setup).and_yield(app)
+    allow(Motion::Project::App).to receive(:config) { app }
   end
 
   describe '#analyze' do
     before do
-      stub_const('Motion::Project::App', Module.new)
-      allow(Motion::Project::App).to receive(:setup).and_yield(app)
+      allow(subject).to receive(:apply)
+      allow(analyzer).to receive(:analyze)
     end
 
     it 'adds excepted files into Analyzer#exclude_files' do
@@ -38,11 +36,6 @@ describe MotionBlender::RakeTasks do
       subject.analyze
       expect(analyzer.exclude_files).to include 'fizz'
       expect(analyzer.exclude_files).to include 'bazz'
-    end
-
-    it 'calls Motion::Project::App.setup' do
-      expect(Motion::Project::App).to receive(:setup).and_yield(app)
-      subject.analyze
     end
 
     it 'calls analyze with incepted_files and app.files in order' do
@@ -55,26 +48,25 @@ describe MotionBlender::RakeTasks do
       subject.analyze
     end
 
-    it 'calls apply with analyzer and app' do
+    it 'calls apply with analyzer' do
       allow(analyzer).to receive(:files) { %w(foo bar) }
-      expect(subject).to receive(:apply).with(analyzer, app)
-      subject.analyze
-    end
-
-    it 'skips apply when analyzer files is empty' do
-      allow(analyzer).to receive(:files) { [] }
-      expect(subject).not_to receive(:apply)
+      expect(subject).to receive(:apply).with(analyzer)
       subject.analyze
     end
   end
 
   describe '#apply' do
+    it 'calls Motion::Project::App.setup' do
+      expect(Motion::Project::App).to receive(:setup).and_yield(app)
+      subject.apply analyzer
+    end
+
     it 'updates app with analyzer files and dependencies' do
       app.files << 'foo'
       allow(analyzer).to receive(:files) { %w(foo bar) }
       allow(analyzer).to receive(:dependencies) { { 'foo' => %w(bar) } }
       expect(app).to receive(:files_dependencies) { { 'foo' => %w(bar) } }
-      subject.apply analyzer, app
+      subject.apply analyzer
 
       expect(app.files).to eq %w(bar foo)
       expect(app.exclude_from_detect_dependencies).to eq %w(bar)
