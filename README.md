@@ -82,11 +82,11 @@ To require this *motion_hoge* makes an application or a gem to load functionalit
 `motion_blender` itself is excepted for analyzing,
 so don't worry to require `motion_blender` in *incept*-ed files.
 
-### Limitation
+### Parsing
 
-Currently, `require` has some limitation because of the way how to analyze the code.
+It parses `require` statements properly in almost all the common cases.
 
-The argument must be a string or an eval-able expression:
+Argument can be a string or an eval-able expression:
 
 ```ruby
 # Good
@@ -103,10 +103,10 @@ Dir.glob('lib/**/*.rb').each { |path| require path }
 Dir[File.dirname(__FILE__) + '/lib/*.rb'].each { |file| require file }
 ```
 
-Required files must exist:
+Takes care of rescue clause:
 
 ```ruby
-# Bad
+# Good
 begin
   require 'may_not_exist'
 rescue LoadError
@@ -118,9 +118,9 @@ end
 
 In the RubyMotion application's Rakefile, `motion_blender` is to be required, typically via `Bundler.require`.
 Then it hooks `build` tasks.
-You can hit `rake -P` and see `motion_blender:analyze` task is hooked.
+You can hit `rake -P` and see `motion_blender:apply` task is hooked.
 
-At the analyze task, MotionBlender runs analyzer on all `Motion::Project::Config#files`.
+In apply task, MotionBlender runs analyzer on all `Motion::Project::Config#files`.
 It uses [parser](https://github.com/whitequark/parser) and follows all `require` and `require_relative`.
 After that, add the newly encountered files to the head of `Motion::Project::Config#files` and put file dependencies to `Motion::Project::Config#dependencies`.
 
