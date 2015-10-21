@@ -25,7 +25,6 @@ describe MotionBlender::RakeTasks do
 
   describe '#analyze' do
     before do
-      allow(subject).to receive(:apply)
       allow(analyzer).to receive(:analyze)
     end
 
@@ -38,18 +37,21 @@ describe MotionBlender::RakeTasks do
       expect(analyzer).to receive(:analyze).with('piyo').ordered
       subject.analyze
     end
-
-    it 'calls apply with analyzer' do
-      allow(analyzer).to receive(:files) { %w(foo bar) }
-      expect(subject).to receive(:apply).with(analyzer)
-      subject.analyze
-    end
   end
 
   describe '#apply' do
+    before do
+      allow(subject).to receive(:analyze) { analyzer }
+    end
+
+    it 'calls analyze' do
+      expect(subject).to receive(:analyze)
+      subject.analyze
+    end
+
     it 'calls Motion::Project::App.setup' do
       expect(Motion::Project::App).to receive(:setup).and_yield(app)
-      subject.apply analyzer
+      subject.apply
     end
 
     it 'updates app with analyzer files and dependencies' do
@@ -57,35 +59,65 @@ describe MotionBlender::RakeTasks do
       allow(analyzer).to receive(:files) { %w(foo bar) }
       allow(analyzer).to receive(:dependencies) { { 'foo' => %w(bar) } }
       expect(app).to receive(:files_dependencies) { { 'foo' => %w(bar) } }
-      subject.apply analyzer
+      subject.apply
 
       expect(app.files).to eq %w(bar foo)
       expect(app.exclude_from_detect_dependencies).to eq %w(bar)
     end
   end
+
+  describe '#dump' do
+    before do
+      allow(subject).to receive(:analyze) { analyzer }
+    end
+
+    it 'calls analyze' do
+      expect(subject).to receive(:analyze)
+      subject.dump
+    end
+
+    it 'puts analyzer contents as yaml' do
+      allow(analyzer).to receive(:files) { %w(foo bar) }
+      allow(analyzer).to receive(:dependencies) { { 'foo' => %w(bar) } }
+      expect(subject.dump).to eq <<-EOS.strip_heredoc
+        ---
+        files:
+        - foo
+        - bar
+        dependencies:
+          foo:
+          - bar
+      EOS
+    end
+  end
 end
 
-describe 'analyze task' do
-  let(:task) { Rake::Task['motion_blender:analyze'] }
+describe 'apply task' do
+  let(:task) { Rake::Task['motion_blender:apply'] }
 
-  before do
-    allow_any_instance_of(MotionBlender::RakeTasks).to receive(:analyze)
-  end
-
-  it 'exists' do
-    expect(task).to be_a Rake::Task
-  end
-
-  it 'calls MotionBlender::RakeTasks#analyze' do
-    expect_any_instance_of(MotionBlender::RakeTasks).to receive(:analyze)
+  it 'calls MotionBlender::RakeTasks#apply' do
+    expect_any_instance_of(MotionBlender::RakeTasks).to receive(:apply)
     task.execute
   end
 
   it 'calls Motion::Project::App.info on parse' do
+    allow_any_instance_of(MotionBlender::RakeTasks).to receive(:apply)
     parser = double(file: 'foo')
     allow(MotionBlender).to receive(:on_parse) { |&p| p.call parser }
     stub_const('Motion::Project::App', Module.new)
     expect(Motion::Project::App).to receive(:info).with('Analyze', 'foo')
     task.execute
+  end
+end
+
+describe 'dump task' do
+  let(:task) { Rake::Task['motion_blender:dump'] }
+
+  it 'puts dumped yaml' do
+    expect_any_instance_of(MotionBlender::RakeTasks)
+      .to receive(:dump) { 'dumped yaml' }
+    expect {
+      task.execute
+    }.to output(/dumped yaml/).to_stdout
   end
 end

@@ -1,4 +1,5 @@
 require 'rake'
+require 'yaml'
 require 'motion_blender/config'
 require 'motion_blender/analyzer'
 
@@ -14,10 +15,11 @@ module MotionBlender
       files.flatten.each do |file|
         analyzer.analyze file
       end
-      apply analyzer
+      analyzer
     end
 
-    def apply analyzer
+    def apply
+      analyzer = analyze
       Motion::Project::App.setup do |app|
         new_files = analyzer.files - app.files
         app.exclude_from_detect_dependencies += new_files
@@ -26,18 +28,28 @@ module MotionBlender
         app.files_dependencies analyzer.dependencies
       end
     end
+
+    def dump
+      analyzer = analyze
+      YAML.dump %w(files dependencies).map { |k| [k, analyzer.send(k)] }.to_h
+    end
   end
 end
 
 namespace :motion_blender do
-  task :analyze do
+  task :apply do
     MotionBlender.on_parse do |parser|
       Motion::Project::App.info('Analyze', parser.file)
     end
-    MotionBlender::RakeTasks.new.analyze
+    MotionBlender::RakeTasks.new.apply
+  end
+
+  desc 'Dump analyzed files and dependencies'
+  task :dump do
+    puts MotionBlender::RakeTasks.new.dump
   end
 end
 
 %w(build:simulator build:device).each do |t|
-  task t => 'motion_blender:analyze'
+  task t => 'motion_blender:apply'
 end
