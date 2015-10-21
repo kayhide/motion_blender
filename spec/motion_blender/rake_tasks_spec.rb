@@ -18,7 +18,6 @@ describe MotionBlender::RakeTasks do
   }
 
   before do
-    MotionBlender.reset_config
     stub_const('Motion::Project::App', Module.new)
     allow(Motion::Project::App).to receive(:setup).and_yield(app)
     allow(Motion::Project::App).to receive(:config) { app }
@@ -28,14 +27,6 @@ describe MotionBlender::RakeTasks do
     before do
       allow(subject).to receive(:apply)
       allow(analyzer).to receive(:analyze)
-    end
-
-    it 'adds excepted files into Analyzer#exclude_files' do
-      config.excepted_files << 'fizz' << 'bazz'
-
-      subject.analyze
-      expect(analyzer.exclude_files).to include 'fizz'
-      expect(analyzer.exclude_files).to include 'bazz'
     end
 
     it 'calls analyze with incepted_files and app.files in order' do

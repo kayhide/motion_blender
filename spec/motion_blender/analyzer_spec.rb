@@ -28,7 +28,17 @@ describe MotionBlender::Analyzer do
       expect(@analyzer.dependencies[circular]).to eq [circular]
     end
 
-    it 'raises error with backtrace' do
+    it 'raises error of undefined local error' do
+      src = fixtures_dir.join('invalid_loader.rb').to_s
+      expect {
+        @analyzer.analyze src
+      }.to raise_error { |error|
+        expect(error.message).to match(/undefined local .*`invalid'/)
+        expect(error.backtrace[0]).to include 'invalid_loader'
+      }
+    end
+
+    it 'raises error of not found error' do
       loaders = (0..2).map { |i|
         fixtures_dir.join("error_loader_#{i}.rb").to_s
       }
@@ -36,6 +46,7 @@ describe MotionBlender::Analyzer do
       expect {
         @analyzer.analyze loaders.last
       }.to raise_error { |error|
+        expect(error.message).to match(/not found .*`raise_error'/)
         expect(error.backtrace[0]).to include "#{loaders[0]}:1"
         expect(error.backtrace[1]).to include "#{loaders[1]}:1"
         expect(error.backtrace[2]).to include "#{loaders[2]}:1"
@@ -70,28 +81,28 @@ describe MotionBlender::Analyzer do
       expect(@analyzer.files).to eq [src, foo, bar]
     end
 
-    it 'excludes analyzing files in exclude_files' do
+    it 'excludes analyzing files in excepted_files' do
       src = fixtures_dir.join('foo_loader.rb').to_s
-      @analyzer.exclude_files << src
+      MotionBlender.config.excepted_files << src
       @analyzer.analyze src
 
       expect(@analyzer.files).to match_array []
     end
 
-    it 'excludes required files in exclude_files' do
+    it 'excludes required files in excepted_files' do
       src = fixtures_dir.join('foo_loader.rb').to_s
       foo = fixtures_dir.join('lib/foo.rb').to_s
       bar = fixtures_dir.join('lib/bar.rb').to_s
-      @analyzer.exclude_files << bar
+      MotionBlender.config.excepted_files << bar
       @analyzer.analyze src
 
       expect(@analyzer.files).to match_array [src, foo]
     end
 
-    it 'excludes required args in exclude_files' do
+    it 'excludes required args in builtin_features' do
       src = fixtures_dir.join('foo_loader.rb').to_s
       foo = fixtures_dir.join('lib/foo.rb').to_s
-      @analyzer.exclude_files << 'bar'
+      MotionBlender.config.builtin_features << 'bar'
       @analyzer.analyze src
 
       expect(@analyzer.files).to match_array [src, foo]

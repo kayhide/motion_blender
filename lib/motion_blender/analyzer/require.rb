@@ -58,6 +58,11 @@ module MotionBlender
       def match? arg_or_file
         arg == arg_or_file || file == arg_or_file
       end
+
+      def excluded?
+        MotionBlender.config.builtin_features.include?(arg) ||
+          MotionBlender.config.excepted_files.include?(file)
+      end
     end
   end
 end

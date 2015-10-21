@@ -4,10 +4,6 @@ require 'motion_blender/analyzer/require'
 describe MotionBlender::Analyzer::Require do
   use_lib_dir
 
-  before do
-    MotionBlender.reset_config
-  end
-
   describe '#resolve_path' do
     it 'returns file path' do
       src = fixtures_dir.join('foo_loader.rb').to_s

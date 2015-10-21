@@ -12,7 +12,7 @@ require 'active_support/core_ext'
 require 'motion_blender'
 
 def fixtures_dir
-  Pathname.new(File.expand_path('../fixtures', __FILE__))
+  Bundler.root.join('spec/fixtures')
 end
 
 def use_lib_dir
@@ -24,5 +24,11 @@ def use_lib_dir
 
   after do
     $:.delete lib_dir.to_s
+  end
+end
+
+RSpec.configure do |config|
+  config.before do
+    MotionBlender.reset_config
   end
 end

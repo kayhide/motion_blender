@@ -10,8 +10,6 @@ module MotionBlender
 
     def analyze
       analyzer = Analyzer.new
-      analyzer.exclude_files += builtin_features + config.excepted_files
-
       files = config.incepted_files + Motion::Project::App.config.files
       files.flatten.each do |file|
         analyzer.analyze file
@@ -27,10 +25,6 @@ module MotionBlender
         app.files -= app.spec_files
         app.files_dependencies analyzer.dependencies
       end
-    end
-
-    def builtin_features
-      %w(bigdecimal rational date thread)
     end
   end
 end
