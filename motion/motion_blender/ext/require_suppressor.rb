@@ -8,5 +8,8 @@ Module.new do
   def motion_require _
   end
 
+  def __ORIGINAL__
+  end
+
   Object.send :include, self
 end

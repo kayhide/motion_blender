@@ -32,6 +32,15 @@ describe MotionBlender::Analyzer::Evaluator do
       expect(evaluator.parse_args.map(&:arg)).to eq %w(test/loader.rb)
     end
 
+    it 'evals __ORIGINAL__ using OriginalFinder' do
+      ast = ::Parser::CurrentRuby.parse('require __ORIGINAL__')
+      evaluator = MotionBlender::Analyzer::Evaluator.new(file, ast)
+
+      expect(MotionBlender::Analyzer::OriginalFinder)
+        .to receive(:new).with(file) { double(find: 'test/original.rb') }
+      expect(evaluator.parse_args.map(&:arg)).to eq %w(test/original.rb)
+    end
+
     it 'works with outer loop' do
       src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
         ['nice', 'good'].each { |x|

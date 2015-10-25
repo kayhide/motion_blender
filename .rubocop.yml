@@ -61,6 +61,11 @@ Style/Lambda:
 Style/MethodDefParentheses:
   EnforcedStyle: require_no_parentheses
 
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+Style/MethodName:
+  Exclude:
+    - 'motion/motion_blender/**/*.rb'
+
 # Cop supports --auto-correct.
 Style/MultilineBlockLayout:
   Exclude:

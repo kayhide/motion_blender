@@ -1,4 +1,5 @@
 require 'motion_blender/analyzer/require'
+require 'motion_blender/analyzer/original_finder'
 
 module MotionBlender
   class Analyzer
@@ -56,6 +57,10 @@ module MotionBlender
               @_args ||= []
               @_args << req
             end
+          end
+
+          define_method :__ORIGINAL__ do
+            OriginalFinder.new(@_file).find
           end
         end
       end

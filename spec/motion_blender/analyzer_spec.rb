@@ -28,6 +28,19 @@ describe MotionBlender::Analyzer do
       expect(@analyzer.dependencies[circular]).to eq [circular]
     end
 
+    it 'works with original' do
+      motion_dir = fixtures_dir.join('motion').to_s
+      MotionBlender.config.motion_dirs << motion_dir
+
+      src = fixtures_dir.join('original_loader.rb').to_s
+      @analyzer.analyze src
+      cover = fixtures_dir.join('motion/original.rb').to_s
+      original = fixtures_dir.join('lib/original.rb').to_s
+
+      expect(@analyzer.dependencies[src]).to eq [cover]
+      expect(@analyzer.dependencies[cover]).to eq [original]
+    end
+
     it 'raises error of undefined local error' do
       src = fixtures_dir.join('invalid_loader.rb').to_s
       expect {
