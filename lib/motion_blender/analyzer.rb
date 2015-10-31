@@ -1,15 +1,17 @@
 require 'set'
 require 'pathname'
 require 'motion_blender/analyzer/parser'
+require 'motion_blender/analyzer/cache'
 
 module MotionBlender
   class Analyzer
-    attr_reader :files, :dependencies
+    attr_reader :files, :dependencies, :cache
 
     def initialize
       @analyzed_files = Set.new
       @files = []
       @dependencies = {}
+      @cache = Cache.new
     end
 
     def analyze file, backtrace = []
@@ -17,7 +19,10 @@ module MotionBlender
       return if @analyzed_files.include? file
       @analyzed_files << file
 
-      requires = parse file, backtrace
+      requires = @cache.fetch(file) do
+        parse file, backtrace
+      end
+
       if requires.any?
         @dependencies[file] = requires.map(&:file)
         @files = [*@files, file, *@dependencies[file]].uniq
