@@ -9,7 +9,6 @@ describe MotionBlender::Analyzer::Cache do
   let(:file) {
     t = 20.minutes.ago
     app_dir.join('foo.rb').tap do |f|
-      f.delete if f.exist?
       FileUtils.touch f
       f.utime(t, t)
     end
@@ -18,17 +17,20 @@ describe MotionBlender::Analyzer::Cache do
   let(:cache_file) {
     t = 5.minutes.ago
     cache_dir.join('foo.rb.yml').tap do |f|
-      f.delete if f.exist?
       FileUtils.touch f
       f.utime(t, t)
     end
   }
 
+  after do
+    app_dir.rmtree
+  end
+
   describe '#fetch' do
     it 'calls #read' do
       expect(subject).to receive(:read).with(cache_file)
-      Dir.chdir app_dir do
-        subject.fetch('foo.rb') do
+      Dir.chdir file.dirname do
+        subject.fetch(file.basename) do
         end
       end
     end
@@ -36,8 +38,8 @@ describe MotionBlender::Analyzer::Cache do
     it 'yields and calls #write if valid cache is not existant' do
       allow(subject).to receive(:valid_cache?) { false }
       expect(subject).to receive(:write).with(cache_file, 'content')
-      Dir.chdir app_dir do
-        subject.fetch('foo.rb') do
+      Dir.chdir file.dirname do
+        subject.fetch(file.basename) do
           'content'
         end
       end
@@ -46,8 +48,8 @@ describe MotionBlender::Analyzer::Cache do
     it 'calls #write if failed in #read' do
       cache_file.write(': invalid_yaml')
       expect(subject).to receive(:write).with(cache_file, 'content')
-      Dir.chdir app_dir do
-        subject.fetch('foo.rb') do
+      Dir.chdir file.dirname do
+        subject.fetch(file.basename) do
           'content'
         end
       end

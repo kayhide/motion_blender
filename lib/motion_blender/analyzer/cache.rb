@@ -7,6 +7,7 @@ module MotionBlender
 
       def fetch file
         return yield unless dir
+
         file = Pathname.new(file)
         cache = cache_file_for(file)
         if valid_cache?(file, cache)
