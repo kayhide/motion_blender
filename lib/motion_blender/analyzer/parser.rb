@@ -3,14 +3,13 @@ require 'active_support'
 require 'active_support/callbacks'
 
 require 'motion_blender/analyzer/evaluator'
+require 'motion_blender/analyzer/require'
 
 module MotionBlender
   class Analyzer
     class Parser
       include ActiveSupport::Callbacks
       define_callbacks :parse
-
-      REQUIREMENT_TOKENS = %i(motion_require require_relative require)
 
       attr_reader :file, :requires, :last_trace
 
@@ -43,7 +42,7 @@ module MotionBlender
       end
 
       def require_command? ast
-        (ast.type == :send) && REQUIREMENT_TOKENS.include?(ast.children[1])
+        (ast.type == :send) && Require.acceptable?(ast.children[1])
       end
 
       def raketime_block? ast

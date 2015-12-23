@@ -6,15 +6,14 @@ module MotionBlender
     class Evaluator
       attr_reader :file, :ast, :stack
 
-      def initialize file, ast, stack = [], method = nil
+      def initialize file, ast, stack = []
         @file = file
         @ast = ast
         @stack = stack
-        @method = method || @ast.children[1]
       end
 
       def parse_args
-        extractor = create_extractor
+        extractor = Extractor.new(@file)
         extractor.instance_eval(@ast.loc.expression.source, @file)
         extractor.instance_eval { @_args || [] }
       rescue ScriptError => err
@@ -27,7 +26,7 @@ module MotionBlender
         i = @stack.find_index { |ast| ast.type == :rescue }
         if i && i > 0
           stack = @stack[0..(i - 1)]
-          Evaluator.new(@file, stack.last, stack[0..-2], @method).parse_args
+          Evaluator.new(@file, stack.last, stack[0..-2]).parse_args
         else
           fail LoadError, err.message
         end
@@ -35,22 +34,18 @@ module MotionBlender
 
       def recover_from_standard_error err
         if @stack.any?
-          Evaluator.new(@file, @stack.last, @stack[0..-2], @method).parse_args
+          Evaluator.new(@file, @stack.last, @stack[0..-2]).parse_args
         else
           fail LoadError, err.message
         end
       end
 
-      def create_extractor
-        file = @file
-        extractor = Evaluator.extractor_for(@method).new
-        extractor.instance_eval { @_file = file }
-        extractor
-      end
+      class Extractor
+        def initialize file
+          @_file = file
+        end
 
-      def self.extractor_for method
-        @extractor_classes ||= {}
-        @extractor_classes[method] ||= Class.new do
+        Require::TOKENS.each do |method|
           define_method method do |arg|
             req = Require.new(@_file, method, arg)
             unless req.excluded?
@@ -58,10 +53,10 @@ module MotionBlender
               @_args << req
             end
           end
+        end
 
-          define_method :__ORIGINAL__ do
-            OriginalFinder.new(@_file).find
-          end
+        def __ORIGINAL__
+          OriginalFinder.new(@_file).find
         end
       end
     end

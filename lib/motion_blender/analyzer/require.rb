@@ -7,6 +7,8 @@ module MotionBlender
       include ActiveSupport::Callbacks
       define_callbacks :require
 
+      TOKENS = %i(motion_require require_relative require)
+
       attr_accessor :loader, :method, :arg, :trace
 
       def initialize loader, method, arg
@@ -62,6 +64,10 @@ module MotionBlender
       def excluded?
         MotionBlender.config.builtin_features.include?(arg) ||
           MotionBlender.config.excepted_files.include?(file)
+      end
+
+      def self.acceptable? method
+        TOKENS.include?(method)
       end
     end
   end

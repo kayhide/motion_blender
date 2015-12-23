@@ -64,6 +64,7 @@ Style/MethodDefParentheses:
 # Configuration parameters: EnforcedStyle, SupportedStyles.
 Style/MethodName:
   Exclude:
+    - 'lib/motion_blender/analyzer/evaluator.rb'
     - 'motion/motion_blender/**/*.rb'
 
 # Cop supports --auto-correct.
