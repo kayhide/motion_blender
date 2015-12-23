@@ -11,7 +11,6 @@ module MotionBlender
       @analyzed_files = Set.new
       @files = []
       @dependencies = {}
-      @cache = Cache.new
     end
 
     def analyze file, backtrace = []
@@ -19,9 +18,7 @@ module MotionBlender
       return if @analyzed_files.include? file
       @analyzed_files << file
 
-      requires = @cache.fetch(file) do
-        parse file, backtrace
-      end
+      requires = parse file, backtrace
 
       if requires.present?
         @dependencies[file] = requires.map(&:file)

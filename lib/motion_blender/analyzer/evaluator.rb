@@ -7,11 +7,14 @@ module MotionBlender
     class Evaluator
       attr_reader :source
       attr_reader :trace, :requires
+      attr_reader :dynamic
+      alias_method :dynamic?, :dynamic
 
       def initialize source
         @source = source
         @trace = "#{source.file}:#{source.line}:in `#{source.method}'"
         @requires = []
+        @dynamic = false
       end
 
       def run
@@ -35,13 +38,14 @@ module MotionBlender
         @source = @source.parent while @source && !@source.type.rescue?
         @source &&= @source.parent
         fail LoadError, err.message unless @source
-
+        @dynamic = true
         run
       end
 
       def recover_from_standard_error err
         @source = @source.parent
         fail LoadError, err.message unless @source
+        @dynamic = true
         run
       end
 
