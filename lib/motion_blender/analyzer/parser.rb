@@ -12,7 +12,7 @@ module MotionBlender
       include ActiveSupport::Callbacks
       define_callbacks :parse
 
-      attr_reader :file, :evaluators
+      attr_reader :file, :evaluators, :cache
 
       def initialize file
         @file = file.to_s
@@ -20,9 +20,23 @@ module MotionBlender
       end
 
       def parse
-        ast = ::Parser::CurrentRuby.parse_file(@file)
-        traverse(Source.new(ast: ast)) if ast
+        srcs = cache.fetch do
+          ast = ::Parser::CurrentRuby.parse_file(@file)
+          ast && traverse(Source.new(ast: ast))
+          if @evaluators.present? && @evaluators.none?(&:dynamic?)
+            @evaluators.map(&:source).map(&:attributes)
+          end
+        end
+        if srcs && cache.hit?
+          srcs.each do |attrs|
+            evaluate Source.new(attrs)
+          end
+        end
         self
+      end
+
+      def cache
+        @cache ||= Cache.new @file
       end
 
       def traverse source

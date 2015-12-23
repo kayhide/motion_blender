@@ -108,4 +108,43 @@ describe MotionBlender::Analyzer::Evaluator do
       described_class.new(root.children[1].children[1]).run
     end
   end
+
+  describe '#dynamic?' do
+    it 'returns false for static expression' do
+      ast = ::Parser::CurrentRuby.parse('require "foo" + "bar"')
+      source = Source.new(ast: ast)
+      evaluator = described_class.new(source)
+
+      expect(evaluator.dynamic?).to eq false
+    end
+
+    it 'returns true with outer loop' do
+      src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
+        ['nice', 'good'].each { |x|
+          ['salt', 'pepper'].each { |f| require [x, f].join('_') }
+        }
+      EOS
+
+      source = Source.new(ast: src).children.last.children.last
+      evaluator = described_class.new(source)
+
+      evaluator.run
+      expect(evaluator.dynamic?).to eq true
+    end
+
+    it 'returns true with rescue clause' do
+      allow_any_instance_of(Require).to receive(:file).and_raise(LoadError)
+      src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
+        begin
+          require 'non_existant'
+        rescue LoadError
+        end
+      EOS
+
+      source = Source.new(ast: src).children.first.children.first
+      evaluator = described_class.new(source)
+      evaluator.run
+      expect(evaluator.dynamic?).to eq true
+    end
+  end
 end

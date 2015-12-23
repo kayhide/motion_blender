@@ -35,6 +35,12 @@ module MotionBlender
             []
           end
       end
+
+      def attributes
+        %w(code file line type method).map do |k|
+          [k, instance_variable_get("@#{k}")]
+        end.to_h.as_json
+      end
     end
   end
 end

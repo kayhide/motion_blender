@@ -1,46 +1,61 @@
 module MotionBlender
   class Analyzer
     class Cache
+      attr_reader :file, :hit
+      alias_method :hit?, :hit
+
+      def initialize file
+        @file = Pathname.new(file)
+      end
+
       def dir
         MotionBlender.config.cache_dir
       end
 
-      def fetch file
+      def fetch
         return yield unless dir
 
-        file = Pathname.new(file)
-        cache = cache_file_for(file)
-        if valid_cache?(file, cache)
-          read cache
+        @hit = valid?
+        if @hit
+          read
         else
           content = yield
-          write cache, content
+          write content
         end
       rescue YAML::Exception
-        if cache.exist?
-          cache.delete
-          retry
-        end
+        retry if delete
         raise
       end
 
-      def read file
-        YAML.load_file file
+      def read
+        YAML.load_file cache_file
       end
 
-      def write file, content
-        file.dirname.mkpath
-        file.write YAML.dump(content)
+      def write content
+        if content.nil?
+          delete
+        else
+          cache_file.dirname.mkpath
+          cache_file.write YAML.dump(content)
+        end
         content
       end
 
-      def valid_cache? file, cache
-        cache.file? && file.mtime < cache.mtime
+      def delete
+        cache_file.exist? && cache_file.delete
       end
 
-      def cache_file_for file
-        file = file.relative_path_from(Pathname.new('/')) if file.absolute?
-        dir.join(file.to_s + '.yml')
+      def valid?
+        cache_file.file? && @file.mtime < cache_file.mtime
+      end
+
+      def cache_file
+        @cache_file ||=
+          begin
+            path = @file
+            path = path.relative_path_from(Pathname.new('/')) if path.absolute?
+            dir.join(path.to_s + '.yml')
+          end
       end
     end
   end
