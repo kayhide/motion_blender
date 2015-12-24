@@ -1,21 +1,27 @@
+require 'motion_blender/analyzer/source'
 require 'motion_blender/analyzer/require'
 require 'motion_blender/analyzer/original_finder'
 
 module MotionBlender
   class Analyzer
     class Evaluator
-      attr_reader :file, :ast, :stack
+      attr_reader :source
+      attr_reader :trace, :requires
 
-      def initialize file, ast, stack = []
-        @file = file
-        @ast = ast
-        @stack = stack
+      def initialize source
+        @source = source
+        @trace = "#{source.file}:#{source.line}:in `#{source.method}'"
+        @requires = []
       end
 
-      def parse_args
-        extractor = Extractor.new(@file)
-        extractor.instance_eval(@ast.loc.expression.source, @file)
-        extractor.instance_eval { @_args || [] }
+      def run
+        extractor = Extractor.new(@source.file)
+        extractor.instance_eval(@source.code, @source.file, @source.line)
+        @requires = extractor.instance_variable_get(:@_args) || []
+        @requires.each do |req|
+          req.trace = @trace
+        end
+        self
       rescue ScriptError => err
         recover_from_script_error err
       rescue StandardError => err
@@ -23,21 +29,17 @@ module MotionBlender
       end
 
       def recover_from_script_error err
-        i = @stack.find_index { |ast| ast.type == :rescue }
-        if i && i > 0
-          stack = @stack[0..(i - 1)]
-          Evaluator.new(@file, stack.last, stack[0..-2]).parse_args
-        else
-          fail LoadError, err.message
-        end
+        @source = @source.parent while @source && @source.type != :rescue
+        @source &&= @source.parent
+        fail LoadError, err.message unless @source
+
+        run
       end
 
       def recover_from_standard_error err
-        if @stack.any?
-          Evaluator.new(@file, @stack.last, @stack[0..-2]).parse_args
-        else
-          fail LoadError, err.message
-        end
+        @source = @source.parent
+        fail LoadError, err.message unless @source
+        run
       end
 
       class Extractor

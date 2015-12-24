@@ -2,6 +2,7 @@ require 'parser/current'
 require 'active_support'
 require 'active_support/callbacks'
 
+require 'motion_blender/analyzer/source'
 require 'motion_blender/analyzer/evaluator'
 require 'motion_blender/analyzer/require'
 
@@ -11,34 +12,41 @@ module MotionBlender
       include ActiveSupport::Callbacks
       define_callbacks :parse
 
-      attr_reader :file, :requires, :last_trace
+      attr_reader :file, :evaluators
 
       def initialize file
         @file = file.to_s
-        @requires = []
+        @evaluators = []
       end
 
       def parse
-        ast = ::Parser::CurrentRuby.parse(File.read(@file))
+        ast = ::Parser::CurrentRuby.parse_file(@file)
         traverse ast if ast
+        self
       end
 
-      def traverse ast, stack = []
+      def traverse ast, parent_source = nil
+        source = Source.new(ast: ast, parent: parent_source)
         if require_command?(ast)
-          evaluate ast, stack
+          evaluate source
         elsif !raketime_block?(ast)
           ast.children
             .select { |node| node.is_a?(::Parser::AST::Node) }
-            .each { |node| traverse node, [*stack, ast] }
+            .each { |node| traverse node, source }
         end
       end
 
-      def evaluate ast, stack
-        @last_trace = trace_for ast
-        Evaluator.new(@file, ast, stack).parse_args.each do |req|
-          req.trace = @last_trace
-          @requires << req
-        end
+      def evaluate source
+        @evaluators << Evaluator.new(source)
+        @evaluators.last.run
+      end
+
+      def requires
+        @evaluators.map(&:requires).flatten
+      end
+
+      def last_trace
+        @evaluators.last.try :trace
       end
 
       def require_command? ast
@@ -48,10 +56,6 @@ module MotionBlender
       def raketime_block? ast
         (ast.type == :block) &&
           (ast.children.first.loc.expression.source == 'MotionBlender.raketime')
-      end
-
-      def trace_for ast
-        "#{@file}:#{ast.loc.line}:in `#{ast.children[1]}'"
       end
     end
   end
