@@ -15,6 +15,9 @@ module MotionBlender
       end
 
       def run
+        return if @source.evaluated?
+
+        @source.evaluated!
         extractor = Extractor.new(@source.file)
         extractor.instance_eval(@source.code, @source.file, @source.line)
         @requires = extractor.instance_variable_get(:@_args) || []
