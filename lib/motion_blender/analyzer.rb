@@ -23,7 +23,7 @@ module MotionBlender
         parse file, backtrace
       end
 
-      if requires.any?
+      if requires.present?
         @dependencies[file] = requires.map(&:file)
         @files = [*@files, file, *@dependencies[file]].uniq
         requires.each do |req|

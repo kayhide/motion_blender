@@ -9,36 +9,44 @@ describe MotionBlender::Analyzer::Evaluator do
       .to receive(:file) { |req| req.arg }
   end
 
-  describe '#parse_args' do
-    it 'returns requires' do
+  describe '#run' do
+    it 'sets requires' do
       ast = ::Parser::CurrentRuby.parse('require "foo"')
-      evaluator = MotionBlender::Analyzer::Evaluator.new(file, ast)
+      source = MotionBlender::Analyzer::Source.new(file: file, ast: ast)
+      evaluator = MotionBlender::Analyzer::Evaluator.new(source)
 
-      expect(evaluator.parse_args).to all be_a MotionBlender::Analyzer::Require
-      expect(evaluator.parse_args.map(&:arg)).to eq %w(foo)
+      evaluator.run
+      expect(evaluator.requires).to all be_a MotionBlender::Analyzer::Require
+      expect(evaluator.requires.map(&:arg)).to eq %w(foo)
     end
 
     it 'evals inner expressions' do
       ast = ::Parser::CurrentRuby.parse('require "foo" + "bar"')
-      evaluator = MotionBlender::Analyzer::Evaluator.new(file, ast)
+      source = MotionBlender::Analyzer::Source.new(file: file, ast: ast)
+      evaluator = MotionBlender::Analyzer::Evaluator.new(source)
 
-      expect(evaluator.parse_args.map(&:arg)).to eq %w(foobar)
+      evaluator.run
+      expect(evaluator.requires.map(&:arg)).to eq %w(foobar)
     end
 
     it 'evals __FILE__' do
       ast = ::Parser::CurrentRuby.parse('require __FILE__')
-      evaluator = MotionBlender::Analyzer::Evaluator.new(file, ast)
+      source = MotionBlender::Analyzer::Source.new(file: file, ast: ast)
+      evaluator = MotionBlender::Analyzer::Evaluator.new(source)
 
-      expect(evaluator.parse_args.map(&:arg)).to eq %w(test/loader.rb)
+      evaluator.run
+      expect(evaluator.requires.map(&:arg)).to eq %w(test/loader.rb)
     end
 
     it 'evals __ORIGINAL__ using OriginalFinder' do
       ast = ::Parser::CurrentRuby.parse('require __ORIGINAL__')
-      evaluator = MotionBlender::Analyzer::Evaluator.new(file, ast)
+      source = MotionBlender::Analyzer::Source.new(file: file, ast: ast)
+      evaluator = MotionBlender::Analyzer::Evaluator.new(source)
 
       expect(MotionBlender::Analyzer::OriginalFinder)
         .to receive(:new).with(file) { double(find: 'test/original.rb') }
-      expect(evaluator.parse_args.map(&:arg)).to eq %w(test/original.rb)
+      evaluator.run
+      expect(evaluator.requires.map(&:arg)).to eq %w(test/original.rb)
     end
 
     it 'works with outer loop' do
@@ -48,11 +56,15 @@ describe MotionBlender::Analyzer::Evaluator do
         }
       EOS
 
-      stack = [src, src.children.last]
-      ast = src.children.last.children.last
-      evaluator = MotionBlender::Analyzer::Evaluator.new(file, ast, stack)
+      source = MotionBlender::Analyzer::Source.new(file: file, ast: src)
+      source = MotionBlender::Analyzer::Source.new(
+        file: file, ast: src.children.last, parent: source)
+      source = MotionBlender::Analyzer::Source.new(
+        file: file, ast: src.children.last.children.last, parent: source)
+      evaluator = MotionBlender::Analyzer::Evaluator.new(source)
+      evaluator.run
 
-      expect(evaluator.parse_args.map(&:arg))
+      expect(evaluator.requires.map(&:arg))
         .to eq %w(nice_salt nice_pepper good_salt good_pepper)
     end
 
@@ -66,19 +78,23 @@ describe MotionBlender::Analyzer::Evaluator do
         end
       EOS
 
-      stack = [src, src.children.first]
-      ast = src.children.first.children.first
-      evaluator = MotionBlender::Analyzer::Evaluator.new(file, ast, stack)
-
-      expect(evaluator.parse_args).to eq []
+      source = MotionBlender::Analyzer::Source.new(file: file, ast: src)
+      source = MotionBlender::Analyzer::Source.new(
+        file: file, ast: src.children.first, parent: source)
+      source = MotionBlender::Analyzer::Source.new(
+        file: file, ast: src.children.first.children.first, parent: source)
+      evaluator = MotionBlender::Analyzer::Evaluator.new(source)
+      evaluator.run
+      expect(evaluator.requires).to eq []
     end
 
     it 'fails when require arg is invalid' do
       ast = ::Parser::CurrentRuby.parse('require invalid')
-      evaluator = MotionBlender::Analyzer::Evaluator.new(file, ast)
+      source = MotionBlender::Analyzer::Source.new(file: file, ast: ast)
+      evaluator = MotionBlender::Analyzer::Evaluator.new(source)
 
       expect {
-        evaluator.parse_args
+        evaluator.run
       }.to raise_error { |error|
         expect(error).to be_a LoadError
       }

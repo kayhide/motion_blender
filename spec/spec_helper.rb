@@ -6,8 +6,6 @@ ENV['RUBYMOTION_ENV'] ||= 'test'
 
 require 'pry'
 require 'pry-doc'
-require 'active_support'
-require 'active_support/core_ext'
 
 require 'motion_blender'
 require 'motion_blender/config'
