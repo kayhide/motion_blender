@@ -21,18 +21,16 @@ module MotionBlender
 
       def parse
         ast = ::Parser::CurrentRuby.parse_file(@file)
-        traverse ast if ast
+        traverse(Source.new(ast: ast)) if ast
         self
       end
 
-      def traverse ast, parent_source = nil
-        source = Source.new(ast: ast, parent: parent_source)
+      def traverse source
+        ast = source.ast
         if require_command?(ast)
           evaluate source
         elsif !raketime_block?(ast)
-          ast.children
-            .select { |node| node.is_a?(::Parser::AST::Node) }
-            .each { |node| traverse node, source }
+          source.children.each { |src| traverse src }
         end
       end
 
