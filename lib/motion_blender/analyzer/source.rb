@@ -9,11 +9,11 @@ module MotionBlender
         @evaluated = false
         ast = attrs.delete :ast
         if ast
-          @code = ast.loc.expression.source
-          @file = ast.loc.expression.source_buffer.name
-          @line = ast.loc.expression.line
-          @type = ast.type
-          @method = (ast.type == :send) ? ast.children[1] : nil
+          @code = ast.loc.expression.try(:source)
+          @file = ast.loc.expression.try(:source_buffer).try(:name)
+          @line = ast.loc.expression.try(:line)
+          @type = ast.type.to_s.inquiry
+          @method = @type.send? ? ast.children[1] : nil
           @ast = ast
         end
         attrs.each do |k, v|

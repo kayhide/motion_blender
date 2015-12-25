@@ -26,10 +26,9 @@ module MotionBlender
       end
 
       def traverse source
-        ast = source.ast
-        if require_command?(ast)
+        if require_command?(source)
           evaluate source
-        elsif !raketime_block?(ast)
+        elsif !raketime_block?(source)
           source.children.each { |src| traverse src }
         end
       end
@@ -47,13 +46,13 @@ module MotionBlender
         @evaluators.last.try :trace
       end
 
-      def require_command? ast
-        (ast.type == :send) && Require.acceptable?(ast.children[1])
+      def require_command? source
+        source.type.send? && Require.acceptable?(source.method)
       end
 
-      def raketime_block? ast
-        (ast.type == :block) &&
-          (ast.children.first.loc.expression.source == 'MotionBlender.raketime')
+      def raketime_block? source
+        source.type.block? &&
+          (source.children.first.code == 'MotionBlender.raketime')
       end
     end
   end

@@ -32,7 +32,7 @@ module MotionBlender
       end
 
       def recover_from_script_error err
-        @source = @source.parent while @source && @source.type != :rescue
+        @source = @source.parent while @source && !@source.type.rescue?
         @source &&= @source.parent
         fail LoadError, err.message unless @source
 
