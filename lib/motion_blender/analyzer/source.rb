@@ -19,6 +19,8 @@ module MotionBlender
         attrs.each do |k, v|
           instance_variable_set "@#{k}", v
         end
+        @type = @type.to_s.inquiry
+        @method = @method.try(:to_sym)
       end
 
       def evaluated!
@@ -37,9 +39,13 @@ module MotionBlender
       end
 
       def attributes
-        %w(code file line type method).map do |k|
-          [k, instance_variable_get("@#{k}")]
-        end.to_h.as_json
+        {
+          'code' => @code,
+          'file' => @file,
+          'line' => @line,
+          'type' => @type.to_s,
+          'method' => @method.try(:to_s)
+        }
       end
     end
   end

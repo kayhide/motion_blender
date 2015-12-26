@@ -69,14 +69,6 @@ describe MotionBlender::Analyzer::Parser do
         parser.parse
         expect(parser.requires.map(&:arg)).to eq %w(foo)
       end
-
-      it 'skips to cache if source is dynamic' do
-        src = fixtures_dir.join('all_loader.rb').to_s
-        parser = described_class.new(src)
-        parser.parse
-
-        expect(parser.cache.cache_file).not_to be_exist
-      end
     end
   end
 end

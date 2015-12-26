@@ -34,9 +34,7 @@ module MotionBlender
     def parse file, backtrace
       parser = Parser.new file
       begin
-        parser.run_callbacks :parse do
-          parser.parse
-        end
+        parser.parse
       rescue LoadError => err
         err.set_backtrace [parser.last_trace, *backtrace].compact
         raise err

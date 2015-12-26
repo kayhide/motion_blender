@@ -21,9 +21,9 @@ module MotionBlender
 
       def parse
         srcs = cache.fetch do
-          ast = ::Parser::CurrentRuby.parse_file(@file)
-          ast && traverse(Source.new(ast: ast))
-          if @evaluators.present? && @evaluators.none?(&:dynamic?)
+          run_callbacks :parse do
+            ast = ::Parser::CurrentRuby.parse_file(@file)
+            ast && traverse(Source.new(ast: ast))
             @evaluators.map(&:source).map(&:attributes)
           end
         end
