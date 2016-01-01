@@ -28,22 +28,13 @@ module MotionBlender
           req.trace = @trace
         end
         self
-      rescue ScriptError => err
-        recover_from_script_error err
-      rescue StandardError => err
-        recover_from_standard_error err
+      rescue StandardError, ScriptError => err
+        recover_from_error err
       end
 
-      def recover_from_script_error err
-        @source = @source.parent while @source && !@source.type.rescue?
-        @source &&= @source.parent
-        fail LoadError, err.message unless @source
-        @dynamic = true
-        run
-      end
-
-      def recover_from_standard_error err
+      def recover_from_error err
         @source = @source.parent
+        @source = @source.parent if @source && @source.type.rescue?
         fail LoadError, err.message unless @source
         @dynamic = true
         run

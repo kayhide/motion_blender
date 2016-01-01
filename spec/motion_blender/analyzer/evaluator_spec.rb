@@ -67,6 +67,27 @@ describe MotionBlender::Analyzer::Evaluator do
         .to eq %w(nice_salt nice_pepper good_salt good_pepper)
     end
 
+    it 'works with if statement' do
+      allow_any_instance_of(Require)
+        .to receive(:file) do |req|
+        fail LoadError if req.arg == 'java'
+        req.arg
+      end
+
+      src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
+        if RUBY_PLATFORM == 'java'
+          require 'java'
+        else
+          require 'common'
+        end
+      EOS
+      source = Source.new(ast: src).children[1]
+      evaluator = described_class.new(source)
+      evaluator.run
+
+      expect(evaluator.requires.map(&:arg)).to eq %w(common)
+    end
+
     it 'works with rescue clause' do
       allow_any_instance_of(Require).to receive(:file).and_raise(LoadError)
       src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
