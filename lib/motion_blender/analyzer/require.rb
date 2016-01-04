@@ -63,6 +63,7 @@ module MotionBlender
 
       def excluded?
         MotionBlender.config.builtin_features.include?(arg) ||
+          MotionBlender.config.excepted_files.include?(arg) ||
           MotionBlender.config.excepted_files.include?(file)
       end
 
