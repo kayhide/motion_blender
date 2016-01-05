@@ -4,7 +4,7 @@ require 'motion_blender/analyzer/evaluator'
 describe MotionBlender::Analyzer::Evaluator do
   Source = MotionBlender::Analyzer::Source
   Require = MotionBlender::Analyzer::Require
-  OriginalFinder = MotionBlender::Analyzer::OriginalFinder
+  OriginalInterpreter = MotionBlender::Interpreters::OriginalInterpreter
 
   let(:file) { 'test/loader.rb' }
 
@@ -41,13 +41,13 @@ describe MotionBlender::Analyzer::Evaluator do
       expect(evaluator.requires.map(&:arg)).to eq %w(test/loader.rb)
     end
 
-    it 'evals __ORIGINAL__ using OriginalFinder' do
+    it 'evals __ORIGINAL__ using OriginalInterpreter' do
       ast = ::Parser::CurrentRuby.parse('require __ORIGINAL__')
       source = Source.new(file: file, ast: ast)
       evaluator = described_class.new(source)
 
-      expect(OriginalFinder)
-        .to receive(:new).with(file) { double(find: 'test/original.rb') }
+      expect_any_instance_of(OriginalInterpreter)
+        .to receive(:interpret) { 'test/original.rb' }
       evaluator.run
       expect(evaluator.requires.map(&:arg)).to eq %w(test/original.rb)
     end
