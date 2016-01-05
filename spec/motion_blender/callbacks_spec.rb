@@ -8,7 +8,7 @@ module MotionBlender
 
     before do
       Analyzer::Parser.reset_callbacks :parse
-      Analyzer::Require.reset_callbacks :require
+      Require.reset_callbacks :require
     end
 
     describe '.on_parse' do
@@ -46,7 +46,7 @@ module MotionBlender
         analyzer.analyze src
 
         expect(reqs.length).to eq 2
-        expect(reqs).to all be_a Analyzer::Require
+        expect(reqs).to all be_a Require
         expect(reqs.map(&:arg)).to eq %w(foo bar)
       end
 

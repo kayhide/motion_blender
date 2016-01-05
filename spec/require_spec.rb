@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'motion_blender/analyzer/require'
+require 'motion_blender/require'
 
 module MotionBlender
-  describe Analyzer::Require do
+  describe Require do
     describe '#match?' do
       subject {
         described_class.new('loader.rb', :require, 'feature').tap do |req|

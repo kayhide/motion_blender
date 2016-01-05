@@ -14,7 +14,7 @@ module MotionBlender
       def interpret arg
         return if excluded_arg? arg
 
-        req = Analyzer::Require.new(file, method, arg)
+        req = Require.new(file, method, arg)
         req.file = resolve_path req.arg
         return if excluded_file? req.file
 

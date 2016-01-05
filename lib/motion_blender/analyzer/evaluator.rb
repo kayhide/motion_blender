@@ -1,5 +1,4 @@
 require 'motion_blender/collector'
-require 'motion_blender/analyzer/source'
 
 module MotionBlender
   class Analyzer

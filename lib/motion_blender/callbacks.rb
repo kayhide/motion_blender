@@ -11,7 +11,7 @@ module MotionBlender
     def on_require file = nil, &proc
       filters = {}
       filters[:if] = -> { match? file } if file
-      Analyzer::Require.set_callback(:require, filters, &proc)
+      Require.set_callback(:require, filters, &proc)
     end
   end
 

@@ -13,17 +13,17 @@ module MotionBlender
     describe '#run' do
       it 'sets requires' do
         ast = ::Parser::CurrentRuby.parse('require "foo"')
-        source = Analyzer::Source.new(ast: ast)
+        source = Source.new(ast: ast)
         evaluator = described_class.new(source)
 
         evaluator.run
-        expect(evaluator.requires).to all be_a Analyzer::Require
+        expect(evaluator.requires).to all be_a Require
         expect(evaluator.requires.map(&:arg)).to eq %w(foo)
       end
 
       it 'evals inner expressions' do
         ast = ::Parser::CurrentRuby.parse('require "foo" + "bar"')
-        source = Analyzer::Source.new(ast: ast)
+        source = Source.new(ast: ast)
         evaluator = described_class.new(source)
 
         evaluator.run
@@ -32,7 +32,7 @@ module MotionBlender
 
       it 'evals __FILE__' do
         ast = ::Parser::CurrentRuby.parse('require __FILE__')
-        source = Analyzer::Source.new(file: file, ast: ast)
+        source = Source.new(file: file, ast: ast)
         evaluator = described_class.new(source)
 
         evaluator.run
@@ -41,7 +41,7 @@ module MotionBlender
 
       it 'evals __ORIGINAL__ using OriginalInterpreter' do
         ast = ::Parser::CurrentRuby.parse('require __ORIGINAL__')
-        source = Analyzer::Source.new(file: file, ast: ast)
+        source = Source.new(file: file, ast: ast)
         evaluator = described_class.new(source)
 
         expect_any_instance_of(Interpreters::OriginalInterpreter)
@@ -57,7 +57,7 @@ module MotionBlender
           }
         EOS
 
-        source = Analyzer::Source.new(ast: src).children.last.children.last
+        source = Source.new(ast: src).children.last.children.last
         evaluator = described_class.new(source)
         evaluator.run
 
@@ -66,7 +66,7 @@ module MotionBlender
       end
 
       it 'works with if statement' do
-        allow_any_instance_of(Analyzer::Require)
+        allow_any_instance_of(Require)
           .to receive(:file) do |req|
           fail LoadError if req.arg == 'java'
           req.arg
@@ -79,7 +79,7 @@ module MotionBlender
             require 'common'
           end
         EOS
-        source = Analyzer::Source.new(ast: src).children[1]
+        source = Source.new(ast: src).children[1]
         evaluator = described_class.new(source)
         evaluator.run
 
@@ -87,7 +87,7 @@ module MotionBlender
       end
 
       it 'works with rescue clause' do
-        allow_any_instance_of(Analyzer::Require)
+        allow_any_instance_of(Require)
           .to receive(:file).and_raise(LoadError)
         src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
           begin
@@ -96,7 +96,7 @@ module MotionBlender
           end
         EOS
 
-        source = Analyzer::Source.new(ast: src).children.first.children.first
+        source = Source.new(ast: src).children.first.children.first
         evaluator = described_class.new(source)
         evaluator.run
         expect(evaluator.requires).to eq []
@@ -104,7 +104,7 @@ module MotionBlender
 
       it 'fails when require arg is invalid' do
         ast = ::Parser::CurrentRuby.parse('require invalid')
-        source = Analyzer::Source.new(ast: ast)
+        source = Source.new(ast: ast)
         evaluator = described_class.new(source)
 
         expect {
@@ -122,7 +122,7 @@ module MotionBlender
           end
         EOS
 
-        root = Analyzer::Source.new(ast: src)
+        root = Source.new(ast: src)
         expect(root).to receive(:evaluated!).once.and_call_original
         described_class.new(root.children[1].children[0]).run
         described_class.new(root.children[1].children[1]).run
@@ -132,7 +132,7 @@ module MotionBlender
     describe '#dynamic?' do
       it 'returns false for static expression' do
         ast = ::Parser::CurrentRuby.parse('require "foo" + "bar"')
-        source = Analyzer::Source.new(ast: ast)
+        source = Source.new(ast: ast)
         evaluator = described_class.new(source)
 
         expect(evaluator.dynamic?).to eq false
@@ -145,7 +145,7 @@ module MotionBlender
           }
         EOS
 
-        source = Analyzer::Source.new(ast: src).children.last.children.last
+        source = Source.new(ast: src).children.last.children.last
         evaluator = described_class.new(source)
 
         evaluator.run
@@ -153,7 +153,7 @@ module MotionBlender
       end
 
       it 'returns true with rescue clause' do
-        allow_any_instance_of(Analyzer::Require)
+        allow_any_instance_of(Require)
           .to receive(:file).and_raise(LoadError)
         src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
           begin
@@ -162,7 +162,7 @@ module MotionBlender
           end
         EOS
 
-        source = Analyzer::Source.new(ast: src).children.first.children.first
+        source = Source.new(ast: src).children.first.children.first
         evaluator = described_class.new(source)
         evaluator.run
         expect(evaluator.dynamic?).to eq true
