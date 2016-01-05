@@ -3,6 +3,7 @@ require 'spec_helper'
 module MotionBlender
   describe GraphMaker do
     use_lib_dir
+    use_tmp_dir
 
     let(:dependencies) {
       foo = fixtures_dir.join('lib/foo.rb').to_s

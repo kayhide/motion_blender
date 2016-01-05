@@ -51,6 +51,8 @@ module MotionBlender
     end
 
     describe '#use_motion_dir' do
+      use_lib_dir
+
       before do
         allow(@ext).to receive(:motion?) { true }
       end
@@ -63,8 +65,6 @@ module MotionBlender
       end
 
       describe 'without arg' do
-        use_lib_dir
-
         it 'detects motion dir automatically from caller path' do
           dir = fixtures_dir.join('motion').to_s
           allow(@ext).to receive(:caller) {
