@@ -3,11 +3,17 @@ require 'motion_blender/interpreters/base'
 module MotionBlender
   module Interpreters
     class RequireRelativeInterpreter < Base
-      interprets :require_relative, requirable: true
+      include Requirable
+      interprets :require_relative
 
-      def interpret arg
-        req = Analyzer::Require.new(file, method, arg)
-        requires << req unless req.excluded?
+      def candidates arg
+        path = Pathname.new(file).dirname.join(arg)
+        exts = path.extname.empty? ? ['', '.rb'] : ['']
+        Enumerator.new do |y|
+          exts.each do |ext|
+            y << Pathname.new("#{path}#{ext}")
+          end
+        end
       end
     end
   end

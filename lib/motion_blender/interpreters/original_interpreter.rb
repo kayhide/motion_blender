@@ -14,6 +14,8 @@ module MotionBlender
         @original = candidates_for(arg).find(&:file?).try(&:to_s)
       end
 
+      private
+
       def candidates_for arg
         Enumerator.new do |y|
           $LOAD_PATH.each do |dir|

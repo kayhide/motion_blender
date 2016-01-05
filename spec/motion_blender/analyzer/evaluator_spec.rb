@@ -4,12 +4,14 @@ require 'motion_blender/analyzer/evaluator'
 describe MotionBlender::Analyzer::Evaluator do
   Source = MotionBlender::Analyzer::Source
   Require = MotionBlender::Analyzer::Require
+  RequireInterpreter = MotionBlender::Interpreters::RequireInterpreter
   OriginalInterpreter = MotionBlender::Interpreters::OriginalInterpreter
 
   let(:file) { 'test/loader.rb' }
 
   before do
-    allow_any_instance_of(Require).to receive(:file) { |req| req.arg }
+    allow_any_instance_of(RequireInterpreter)
+      .to receive(:resolve_path) { |_, arg| arg }
   end
 
   describe '#run' do

@@ -2,16 +2,13 @@ require 'spec_helper'
 
 describe MotionBlender::Interpreters::OriginalInterpreter do
   use_lib_dir
+  use_collector
 
-  subject {
-    interpretor = described_class.new(nil)
-    allow(interpretor).to receive(:file) { file }
-    interpretor
-  }
+  let(:src_file) { fixtures_dir.join('motion/original.rb').to_s }
+
+  subject { described_class.new(collector) }
 
   describe '#interpret' do
-    let(:file) { fixtures_dir.join('motion/original.rb').to_s }
-
     it 'returns file path with lib dir' do
       motion_dir = fixtures_dir.join('motion').to_s
       MotionBlender.config.motion_dirs << motion_dir

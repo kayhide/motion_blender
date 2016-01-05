@@ -1,13 +1,27 @@
 require 'motion_blender/interpreters/base'
+require 'motion_blender/interpreters/requirable'
 
 module MotionBlender
   module Interpreters
     class RequireInterpreter < Base
-      interprets :require, requirable: true
+      include Requirable
+      interprets :require
 
-      def interpret arg
-        req = Analyzer::Require.new(file, method, arg)
-        requires << req unless req.excluded?
+      def candidates arg
+        path = Pathname.new(arg)
+        dirs = path.relative? && load_path || ['']
+        exts = path.extname.empty? ? ['', '.rb'] : ['']
+        Enumerator.new do |y|
+          dirs.product(exts).each do |dir, ext|
+            y << Pathname.new(dir).join("#{path}#{ext}")
+          end
+        end
+      end
+
+      private
+
+      def load_path
+        MotionBlender.config.motion_dirs + $LOAD_PATH
       end
     end
   end
