@@ -1,6 +1,5 @@
+require 'motion_blender/collector'
 require 'motion_blender/analyzer/source'
-require 'motion_blender/analyzer/require'
-require 'motion_blender/analyzer/original_finder'
 
 module MotionBlender
   class Analyzer
@@ -21,9 +20,9 @@ module MotionBlender
         return if @source.evaluated?
 
         @source.evaluated!
-        extractor = Extractor.new(@source.file)
-        extractor.instance_eval(@source.code, @source.file, @source.line)
-        @requires = extractor.instance_variable_get(:@_args) || []
+        collector = Collector.get(@source)
+        collector.instance_eval(@source.code, @source.file, @source.line)
+        @requires = collector.instance_variable_get(:@_requires) || []
         @requires.each do |req|
           req.trace = @trace
         end
@@ -38,26 +37,6 @@ module MotionBlender
         fail LoadError, err.message unless @source
         @dynamic = true
         run
-      end
-
-      class Extractor
-        def initialize file
-          @_file = file
-        end
-
-        Require::TOKENS.each do |method|
-          define_method method do |arg|
-            req = Require.new(@_file, method, arg)
-            unless req.excluded?
-              @_args ||= []
-              @_args << req
-            end
-          end
-        end
-
-        def __ORIGINAL__
-          OriginalFinder.new(@_file).find
-        end
       end
     end
   end

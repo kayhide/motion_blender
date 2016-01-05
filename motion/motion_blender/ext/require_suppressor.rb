@@ -5,9 +5,6 @@ Module.new do
   def require_relative _
   end
 
-  def motion_require _
-  end
-
   def __ORIGINAL__
   end
 

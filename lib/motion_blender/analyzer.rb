@@ -1,11 +1,11 @@
 require 'set'
 require 'pathname'
+require 'motion_blender/interpreters'
 require 'motion_blender/analyzer/parser'
-require 'motion_blender/analyzer/cache'
 
 module MotionBlender
   class Analyzer
-    attr_reader :files, :dependencies, :cache
+    attr_reader :files, :dependencies
 
     def initialize
       @analyzed_files = Set.new
