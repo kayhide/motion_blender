@@ -4,10 +4,12 @@ module MotionBlender
   module Interpreters
     class Base
       module ClassMethods
-        attr_reader :method
+        attr_reader :method, :requirable
+        alias_method :requirable?, :requirable
 
-        def interprets method
+        def interprets method, options = {}
           @method = method
+          @requirable = !!options[:requirable]
           Collector.interpreters[method] = self
           Collector.reset_prepared
         end

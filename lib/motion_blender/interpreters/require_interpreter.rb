@@ -3,10 +3,10 @@ require 'motion_blender/interpreters/base'
 module MotionBlender
   module Interpreters
     class RequireInterpreter < Base
-      interprets :require
+      interprets :require, requirable: true
 
       def interpret arg
-        req = Require.new(file, method, arg)
+        req = Analyzer::Require.new(file, method, arg)
         requires << req unless req.excluded?
       end
     end

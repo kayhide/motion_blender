@@ -3,9 +3,7 @@ require 'active_support'
 require 'active_support/callbacks'
 
 require 'motion_blender/analyzer/cache'
-require 'motion_blender/analyzer/source'
 require 'motion_blender/analyzer/evaluator'
-require 'motion_blender/analyzer/require'
 
 module MotionBlender
   class Analyzer
@@ -41,9 +39,9 @@ module MotionBlender
       end
 
       def traverse source
-        if require_command?(source)
+        if Collector.requirable?(source)
           evaluate source
-        elsif !raketime_block?(source)
+        elsif Collector.acceptable?(source)
           source.children.each { |src| traverse src }
         end
       end
@@ -59,15 +57,6 @@ module MotionBlender
 
       def last_trace
         @evaluators.last.try :trace
-      end
-
-      def require_command? source
-        source.type.send? && Require.acceptable?(source.method)
-      end
-
-      def raketime_block? source
-        source.type.block? &&
-          (source.children.first.code == 'MotionBlender.raketime')
       end
     end
   end

@@ -16,6 +16,10 @@ module MotionBlender
         new(source, interpreters)
       end
 
+      def collect_requires collector
+        collector.instance_variable_get(:@_requires)
+      end
+
       def prepare
         interpreters.each do |method, _|
           define_method method do |*args, &proc|
@@ -27,6 +31,21 @@ module MotionBlender
 
       def reset_prepared
         @prepared = false
+        @requirable_methods = nil
+      end
+
+      def requirable_methods
+        @requirable_methods ||=
+          interpreters.values.select(&:requirable?).map(&:method)
+      end
+
+      def requirable? source
+        source.type.send? && requirable_methods.include?(source.method)
+      end
+
+      def acceptable? source
+        !source.type.block? ||
+          (source.children.first.code != 'MotionBlender.raketime')
       end
     end
 

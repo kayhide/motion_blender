@@ -22,7 +22,7 @@ module MotionBlender
         @source.evaluated!
         collector = Collector.get(@source)
         collector.instance_eval(@source.code, @source.file, @source.line)
-        @requires = collector.instance_variable_get(:@_requires) || []
+        @requires = Collector.collect_requires(collector)
         @requires.each do |req|
           req.trace = @trace
         end
