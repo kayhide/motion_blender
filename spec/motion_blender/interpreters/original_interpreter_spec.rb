@@ -3,11 +3,14 @@ require 'spec_helper'
 module MotionBlender
   describe Interpreters::OriginalInterpreter do
     use_lib_dir
-    use_collector
 
-    let(:src_file) { fixtures_dir.join('motion/original.rb').to_s }
+    let(:file) { fixtures_dir.join('motion/original.rb').to_s }
 
-    subject { described_class.new(collector) }
+    subject {
+      described_class.new(double).tap do |interpreter|
+        allow(interpreter).to receive(:file) { file }
+      end
+    }
 
     describe '#interpret' do
       it 'returns file path with lib dir' do

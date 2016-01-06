@@ -3,36 +3,30 @@ require 'spec_helper'
 module MotionBlender
   describe Collector do
     describe '.interpreters' do
-      it 'returns interpreters indexed by method' do
-        expected = {
-          require: Interpreters::RequireInterpreter,
-          require_relative: Interpreters::RequireRelativeInterpreter,
-          __ORIGINAL__: Interpreters::OriginalInterpreter
-        }
-        expect(described_class.interpreters).to include expected
+      it 'returns all registered interpreters' do
+        expected = [
+          Interpreters::RequireInterpreter,
+          Interpreters::RequireRelativeInterpreter,
+          Interpreters::OriginalInterpreter
+        ]
+        expect(described_class.interpreters).to match_array expected
       end
     end
 
-    describe '.get' do
-      let(:source) { double }
+    describe '.requirable?' do
+      it 'calls .interpreters #requirable?' do
+        interpreters = [
+          double(requirable?: false),
+          double(requirable?: true),
+          double(requirable?: true)
+        ]
+        allow(described_class).to receive(:interpreters) { interpreters }
 
-      it 'returns new collector' do
-        expect(described_class.get(source)).to be_a described_class
-      end
-
-      it 'calls .prepare and set .prepared?' do
-        described_class.reset_prepared
-        expect(described_class).to receive(:prepare).and_call_original
-        expect {
-          described_class.get(source)
-        }.to change(described_class, :prepared?).to(true)
-      end
-    end
-
-    describe '.requirable_methods' do
-      it 'returns methods' do
-        expect(described_class.requirable_methods)
-          .to match_array [:require, :require_relative]
+        source = double
+        described_class.requirable? source
+        expect(interpreters[0]).to have_received(:requirable?).with(source)
+        expect(interpreters[1]).to have_received(:requirable?).with(source)
+        expect(interpreters[2]).not_to have_received(:requirable?)
       end
     end
   end

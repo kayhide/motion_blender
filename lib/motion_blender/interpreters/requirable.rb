@@ -1,13 +1,11 @@
-require 'active_support/concern'
-
 module MotionBlender
   module Interpreters
     module Requirable
       extend ActiveSupport::Concern
 
       module ClassMethods
-        def requirable?
-          true
+        def requirable? source
+          source.type.send? && (source.method == method)
         end
       end
 

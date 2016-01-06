@@ -3,17 +3,23 @@ require 'spec_helper'
 module MotionBlender
   describe Interpreters::RequireInterpreter do
     use_lib_dir
-    use_collector
 
-    let(:src_file) { fixtures_dir.join('foo_loader.rb').to_s }
+    let(:requires) { [] }
 
-    subject { described_class.new(collector) }
+    let(:file) { fixtures_dir.join('foo_loader.rb').to_s }
+
+    subject {
+      described_class.new(double).tap do |interpreter|
+        allow(interpreter).to receive(:file) { file }
+        allow(interpreter).to receive(:requires) { requires }
+      end
+    }
 
     describe '#interpret' do
       it 'adds require to requires' do
         expect {
           subject.interpret 'foo'
-        }.to change(collector_requires, :count).by(1)
+        }.to change(requires, :count).by(1)
       end
     end
 

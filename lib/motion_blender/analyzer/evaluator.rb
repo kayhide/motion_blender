@@ -17,11 +17,9 @@ module MotionBlender
 
       def run
         return if @source.evaluated?
-
         @source.evaluated!
-        collector = Collector.get(@source)
-        collector.instance_eval(@source.code, @source.file, @source.line)
-        @requires = Collector.collect_requires(collector)
+
+        @requires = Collector.collect_requires(@source)
         @requires.each do |req|
           req.trace = @trace
         end

@@ -4,57 +4,73 @@ require 'motion_blender/require'
 module MotionBlender
   class Collector
     class << self
-      attr_accessor :prepared
-      alias_method :prepared?, :prepared
-
       def interpreters
-        @interpreters ||= {}
+        @interpreters ||= []
       end
 
-      def get source
-        prepare unless prepared?
-        new(source, interpreters)
-      end
-
-      def collect_requires collector
-        collector.instance_variable_get(:@_requires)
-      end
-
-      def prepare
-        interpreters.each do |method, _|
-          define_method method do |*args, &proc|
-            @_interpreters[method].interpret(*args, &proc)
-          end
-        end
-        @prepared = true
-      end
-
-      def reset_prepared
-        @prepared = false
-        @requirable_methods = nil
-      end
-
-      def requirable_methods
-        @requirable_methods ||=
-          interpreters.values.select(&:requirable?).map(&:method)
+      def register interpreter
+        interpreters << interpreter
+        interpreter
       end
 
       def requirable? source
-        source.type.send? && requirable_methods.include?(source.method)
+        interpreters.each_with_object(source).any?(&:requirable?)
       end
 
       def acceptable? source
         !source.type.block? ||
           (source.children.first.code != 'MotionBlender.raketime')
       end
+
+      def collect_requires source
+        collector = new(source, interpreters)
+        interpreters.each do |interpreter|
+          get_refinement_for(interpreter.receiver).module_eval do
+            define_method interpreter.method do |*args, &proc|
+              collector.interpreters[interpreter.key].interpret(*args, &proc)
+            end
+          end
+        end
+        Object.new.instance_eval(source.code, source.file, source.line)
+        collector.requires
+      ensure
+        clear_refinements
+      end
+
+      private
+
+      def refinements
+        @refinements ||= {}
+      end
+
+      def get_refinement_for klass
+        refinements[klass] ||=
+          begin
+            Module.new do
+              klass.prepend self
+            end
+          end
+      end
+
+      def clear_refinements
+        refinements.each do |_, mod|
+          mod.module_eval do
+            instance_methods.each do |m|
+              remove_method m
+            end
+          end
+        end
+      end
     end
 
+    attr_accessor :source, :interpreters, :requires
+
     def initialize source, interpreters
-      @_source = source
-      @_interpreters = interpreters.map do |method, interpreter|
-        [method, interpreter.new(self)]
+      @source = source
+      @interpreters = interpreters.map do |interpreter|
+        [interpreter.key, interpreter.new(self)]
       end.to_h
-      @_requires = []
+      @requires = []
     end
   end
 end
