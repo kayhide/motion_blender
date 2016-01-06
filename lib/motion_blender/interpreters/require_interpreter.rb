@@ -7,6 +7,12 @@ module MotionBlender
       include Requirable
       interprets :require
 
+      def interpret arg
+        find_require(arg) do |req|
+          requires << req
+        end
+      end
+
       def candidates arg
         path = Pathname.new(arg)
         dirs = path.relative? && load_path || ['']

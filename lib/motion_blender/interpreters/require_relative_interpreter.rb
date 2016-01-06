@@ -6,6 +6,12 @@ module MotionBlender
       include Requirable
       interprets :require_relative
 
+      def interpret arg
+        find_require(arg) do |req|
+          requires << req
+        end
+      end
+
       def candidates arg
         path = Pathname.new(file).dirname.join(arg)
         exts = path.extname.empty? ? ['', '.rb'] : ['']

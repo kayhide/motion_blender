@@ -11,14 +11,14 @@ module MotionBlender
         end
       end
 
-      def interpret arg
+      def find_require arg
         return if excluded_arg? arg
 
         req = Require.new(file, method, arg)
         req.file = resolve_path req.arg
         return if excluded_file? req.file
 
-        requires << req
+        yield req
         true
       end
 
