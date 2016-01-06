@@ -1,4 +1,2 @@
-MotionBlender.incept
-MotionBlender.use_motion_dir
-
-require 'motion_blender/ext'
+require 'motion_blender/ext/raketime'
+require 'motion_blender/ext/runtime'
