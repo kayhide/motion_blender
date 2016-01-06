@@ -51,6 +51,18 @@ module MotionBlender
         end
     end
 
+    def root?
+      parent.nil?
+    end
+
+    def root
+      root? ? self : parent.root
+    end
+
+    def ancestors
+      root? ? [self] : [self, *parent.ancestors]
+    end
+
     def attributes
       {
         'code' => @code,

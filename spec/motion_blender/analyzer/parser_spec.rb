@@ -22,6 +22,30 @@ module MotionBlender
         expect(parser.requires.map(&:arg)).to eq %w(lib/foo)
       end
 
+      it 'captures autoloads' do
+        src = fixtures_dir.join('autoload/flat_loader.rb').to_s
+        parser = described_class.new(src)
+
+        parser.parse
+        expect(parser.requires.map(&:arg)).to eq %w(foo)
+      end
+
+      it 'captures Module#autoload for module' do
+        src = fixtures_dir.join('autoload/for_module_loader.rb').to_s
+        parser = described_class.new(src)
+
+        parser.parse
+        expect(parser.requires.map(&:arg).uniq).to eq %w(foo bar)
+      end
+
+      it 'captures Module#autoload for class' do
+        src = fixtures_dir.join('autoload/for_class_loader.rb').to_s
+        parser = described_class.new(src)
+
+        parser.parse
+        expect(parser.requires.map(&:arg).uniq).to eq %w(foo bar)
+      end
+
       it 'captures requires in loop' do
         src = fixtures_dir.join('all_loader.rb').to_s
         parser = described_class.new(src)

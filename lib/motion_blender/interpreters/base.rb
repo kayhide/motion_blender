@@ -22,6 +22,7 @@ module MotionBlender
       end
 
       attr_reader :collector
+      attr_accessor :object
       delegate :method, :receiver, to: :class
       delegate :source, :requires, to: :collector
       delegate :file, to: :source

@@ -7,6 +7,8 @@ module MotionBlender
         expected = [
           Interpreters::RequireInterpreter,
           Interpreters::RequireRelativeInterpreter,
+          Interpreters::AutoloadInterpreter,
+          Interpreters::ModuleAutoloadInterpreter,
           Interpreters::OriginalInterpreter
         ]
         expect(described_class.interpreters).to match_array expected

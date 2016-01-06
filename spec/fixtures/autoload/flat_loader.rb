@@ -1,0 +1,1 @@
+autoload :Foo, 'foo'

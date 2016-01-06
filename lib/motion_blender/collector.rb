@@ -24,32 +24,37 @@ module MotionBlender
 
       def collect_requires source
         collector = new(source, interpreters)
-        interpreters.each do |interpreter|
-          get_refinement_for(interpreter.receiver).module_eval do
-            define_method interpreter.method do |*args, &proc|
-              collector.interpreters[interpreter.key].interpret(*args, &proc)
-            end
-          end
+        with_refinements collector do
+          Object.new.instance_eval(source.code, source.file, source.line)
+          collector.requires
         end
-        Object.new.instance_eval(source.code, source.file, source.line)
-        collector.requires
-      ensure
-        clear_refinements
       end
 
       private
 
       def refinements
-        @refinements ||= {}
+        @refinements ||= Hash.new do |hash, key|
+          hash[key] = Module.new { key.prepend self }
+        end
       end
 
-      def get_refinement_for klass
-        refinements[klass] ||=
-          begin
-            Module.new do
-              klass.prepend self
+      def with_refinements collector
+        apply_refinements collector
+        yield
+      ensure
+        clear_refinements
+      end
+
+      def apply_refinements collector
+        interpreters.each do |interpreter|
+          refinements[interpreter.receiver].module_eval do
+            define_method interpreter.method do |*args, &proc|
+              i = collector.interpreters[interpreter.key]
+              i.object = self
+              i.interpret(*args, &proc)
             end
           end
+        end
       end
 
       def clear_refinements
