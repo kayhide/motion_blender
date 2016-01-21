@@ -6,9 +6,7 @@ module MotionBlender
       interprets :autoload
 
       def interpret _, arg
-        find_require(arg) do |req|
-          requires << req
-        end
+        super arg
       end
     end
 
