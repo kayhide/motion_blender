@@ -1,5 +1,17 @@
+require 'parser/current'
+
 module MotionBlender
   class Source
+    def self.parse code, attrs = {}
+      attrs[:ast] = ::Parser::CurrentRuby.parse(code)
+      new(attrs)
+    end
+
+    def self.parse_file file
+      ast = ::Parser::CurrentRuby.parse_file(file)
+      new(ast: ast)
+    end
+
     attr_reader :code, :file, :line, :parent, :type, :method, :ast
     attr_reader :evaluated
     alias_method :evaluated?, :evaluated

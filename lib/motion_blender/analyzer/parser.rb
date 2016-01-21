@@ -1,4 +1,3 @@
-require 'parser/current'
 require 'active_support'
 require 'active_support/callbacks'
 
@@ -21,8 +20,7 @@ module MotionBlender
       def parse
         srcs = cache.fetch do
           run_callbacks :parse do
-            ast = ::Parser::CurrentRuby.parse_file(@file)
-            ast && traverse(Source.new(ast: ast))
+            traverse(Source.parse_file(@file))
             @evaluators.map(&:source).map(&:attributes)
           end
         end

@@ -12,8 +12,7 @@ module MotionBlender
 
     describe '#run' do
       it 'sets requires' do
-        ast = ::Parser::CurrentRuby.parse('require "foo"')
-        source = Source.new(ast: ast)
+        source = Source.parse('require "foo"')
         evaluator = described_class.new(source)
 
         evaluator.run
@@ -22,8 +21,7 @@ module MotionBlender
       end
 
       it 'evals inner expressions' do
-        ast = ::Parser::CurrentRuby.parse('require "foo" + "bar"')
-        source = Source.new(ast: ast)
+        source = Source.parse('require "foo" + "bar"')
         evaluator = described_class.new(source)
 
         evaluator.run
@@ -31,8 +29,7 @@ module MotionBlender
       end
 
       it 'evals __FILE__' do
-        ast = ::Parser::CurrentRuby.parse('require __FILE__')
-        source = Source.new(file: file, ast: ast)
+        source = Source.parse('require __FILE__', file: file)
         evaluator = described_class.new(source)
 
         evaluator.run
@@ -40,8 +37,7 @@ module MotionBlender
       end
 
       it 'evals __ORIGINAL__ using OriginalInterpreter' do
-        ast = ::Parser::CurrentRuby.parse('require __ORIGINAL__')
-        source = Source.new(file: file, ast: ast)
+        source = Source.parse('require __ORIGINAL__', file: file)
         evaluator = described_class.new(source)
 
         expect_any_instance_of(Interpreters::OriginalInterpreter)
@@ -51,13 +47,13 @@ module MotionBlender
       end
 
       it 'works with outer loop' do
-        src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
+        root = Source.parse(<<-EOS.strip_heredoc)
           ['nice', 'good'].each { |x|
             ['salt', 'pepper'].each { |f| require [x, f].join('_') }
           }
         EOS
 
-        source = Source.new(ast: src).children.last.children.last
+        source = root.children.last.children.last
         evaluator = described_class.new(source)
         evaluator.run
 
@@ -72,14 +68,14 @@ module MotionBlender
           req.arg
         end
 
-        src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
+        root = Source.parse(<<-EOS.strip_heredoc)
           if RUBY_PLATFORM == 'java'
             require 'java'
           else
             require 'common'
           end
         EOS
-        source = Source.new(ast: src).children[1]
+        source = root.children[1]
         evaluator = described_class.new(source)
         evaluator.run
 
@@ -89,22 +85,21 @@ module MotionBlender
       it 'works with rescue clause' do
         allow_any_instance_of(Require)
           .to receive(:file).and_raise(LoadError)
-        src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
+        root = Source.parse(<<-EOS.strip_heredoc)
           begin
             require 'non_existant'
           rescue LoadError
           end
         EOS
 
-        source = Source.new(ast: src).children.first.children.first
+        source = root.children.first.children.first
         evaluator = described_class.new(source)
         evaluator.run
         expect(evaluator.requires).to eq []
       end
 
       it 'fails when require arg is invalid' do
-        ast = ::Parser::CurrentRuby.parse('require invalid')
-        source = Source.new(ast: ast)
+        source = Source.parse('require invalid')
         evaluator = described_class.new(source)
 
         expect {
@@ -115,14 +110,13 @@ module MotionBlender
       end
 
       it 'evaluates same source only once' do
-        src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
+        root = Source.parse(<<-EOS.strip_heredoc)
           if false
             require invalid_1
             require invalid_2
           end
         EOS
 
-        root = Source.new(ast: src)
         expect(root).to receive(:evaluated!).once.and_call_original
         described_class.new(root.children[1].children[0]).run
         described_class.new(root.children[1].children[1]).run
@@ -131,21 +125,20 @@ module MotionBlender
 
     describe '#dynamic?' do
       it 'returns false for static expression' do
-        ast = ::Parser::CurrentRuby.parse('require "foo" + "bar"')
-        source = Source.new(ast: ast)
+        source = Source.parse('require "foo" + "bar"')
         evaluator = described_class.new(source)
 
         expect(evaluator.dynamic?).to eq false
       end
 
       it 'returns true with outer loop' do
-        src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
+        root = Source.parse(<<-EOS.strip_heredoc)
           ['nice', 'good'].each { |x|
             ['salt', 'pepper'].each { |f| require [x, f].join('_') }
           }
         EOS
 
-        source = Source.new(ast: src).children.last.children.last
+        source = root.children.last.children.last
         evaluator = described_class.new(source)
 
         evaluator.run
@@ -155,14 +148,14 @@ module MotionBlender
       it 'returns true with rescue clause' do
         allow_any_instance_of(Require)
           .to receive(:file).and_raise(LoadError)
-        src = ::Parser::CurrentRuby.parse(<<-EOS.strip_heredoc)
+        root = Source.parse(<<-EOS.strip_heredoc)
           begin
             require 'non_existant'
           rescue LoadError
           end
         EOS
 
-        source = Source.new(ast: src).children.first.children.first
+        source = root.children.first.children.first
         evaluator = described_class.new(source)
         evaluator.run
         expect(evaluator.dynamic?).to eq true
