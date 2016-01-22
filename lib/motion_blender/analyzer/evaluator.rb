@@ -7,10 +7,12 @@ module MotionBlender
       attr_reader :trace, :requires
       attr_reader :dynamic
       alias_method :dynamic?, :dynamic
+      attr_reader :done
+      alias_method :done?, :done
 
       def initialize source
         @source = source
-        @trace = "#{source.file}:#{source.line}:in `#{source.method}'"
+        @trace = source.to_s
         @requires = []
         @dynamic = false
       end
@@ -19,14 +21,17 @@ module MotionBlender
         return if @source.evaluated?
         @source.evaluated!
 
-        @requires = Collector.collect_requires(@source)
+        @requires = Collector.new(@source).collect_requires
         @requires.each do |req|
           req.trace = @trace
         end
+        @done = true
         self
       rescue StandardError, ScriptError => err
         recover_from_error err
       end
+
+      private
 
       def recover_from_error err
         @source = @source.parent

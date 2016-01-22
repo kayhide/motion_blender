@@ -69,8 +69,28 @@ module MotionBlender
         'file' => @file,
         'line' => @line,
         'type' => @type.to_s,
-        'method' => @method.try(:to_s)
+        'method' => @method.try(:to_s),
+        'global_constants' => global_constants
       }
+    end
+
+    def global_constants
+      @global_constants ||=
+        if root?
+          Array.wrap(find_global_constants).flatten.compact.uniq
+        else
+          root.global_constants
+        end
+    end
+
+    def find_global_constants
+      if type.module? || type.class?
+        if children.first.type.const?
+          children.first.code.split('::', 2).first
+        end
+      else
+        children.map(&:find_global_constants)
+      end
     end
   end
 end

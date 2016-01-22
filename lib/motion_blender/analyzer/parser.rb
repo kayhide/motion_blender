@@ -21,7 +21,7 @@ module MotionBlender
         srcs = cache.fetch do
           run_callbacks :parse do
             traverse(Source.parse_file(@file))
-            @evaluators.map(&:source).map(&:attributes)
+            @evaluators.select(&:done?).map(&:source).map(&:attributes)
           end
         end
         if srcs && cache.hit?

@@ -121,6 +121,23 @@ module MotionBlender
         described_class.new(root.children[1].children[0]).run
         described_class.new(root.children[1].children[1]).run
       end
+
+      it 'works with global constants lookup' do
+        source = Source.parse(<<-EOS.strip_heredoc)
+          module Dummy
+            module Yummy
+              extend Dummy::Mummy
+            end
+          end
+          module Gummy
+            module Yummy
+              extend Gummy::Mummy
+            end
+          end
+        EOS
+
+        described_class.new(source).run
+      end
     end
 
     describe '#dynamic?' do
