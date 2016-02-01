@@ -138,6 +138,36 @@ module MotionBlender
 
         described_class.new(source).run
       end
+
+      it 'runs under an object if not wrapped in any module' do
+        SelfCapturer.clear
+        source = Source.parse(<<-EOS.strip_heredoc)
+          extend SelfCapturer
+          capture_self
+        EOS
+
+        expect {
+          described_class.new(source).run
+        }.to change(SelfCapturer, :get).from(nil)
+        expect(SelfCapturer.get).to be_a Object
+      end
+
+      it 'runs under a module wrapped in a singleton module' do
+        SelfCapturer.clear
+        source = Source.parse(<<-EOS.strip_heredoc)
+          module Hoge
+            module Piyo
+              extend SelfCapturer
+              capture_self
+            end
+          end
+        EOS
+
+        expect {
+          described_class.new(source.child_at(1, 1)).run
+        }.to change(SelfCapturer, :get).from(nil)
+        expect(SelfCapturer.get.name).to match(/#<Class:.+>::Hoge::Piyo/)
+      end
     end
 
     describe '#dynamic?' do

@@ -58,5 +58,22 @@ module MotionBlender
         expect(source.global_constants).to eq %w(SomeModule)
       end
     end
+
+    describe '#wrapping_modules' do
+      it 'returns wrapping modules and classes' do
+        source = Source.parse(<<-EOS.strip_heredoc)
+          module Hoge
+            class Piyo
+              1
+            end
+          end
+        EOS
+
+        expect(source.wrapping_modules).to eq []
+        expect(source.child_at(1).wrapping_modules).to eq [%w(module Hoge)]
+        expect(source.child_at(1, 1).wrapping_modules)
+          .to eq [%w(module Hoge), %w(class Piyo)]
+      end
+    end
   end
 end

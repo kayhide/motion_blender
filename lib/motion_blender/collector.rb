@@ -40,13 +40,8 @@ module MotionBlender
     end
 
     def collect_requires
-      constants = @source.global_constants.select do |c|
-        Object.const_defined? c.to_sym
-      end
-      prepends = constants.map { |c| "#{c} = ::#{c}" }
-
-      with_refinements do |obj|
-        prepends.each { |s| obj.instance_eval s }
+      obj = evaluating_object
+      with_refinements do
         obj.instance_eval(source.code, source.file, source.line)
         requires
       end
@@ -56,9 +51,23 @@ module MotionBlender
 
     delegate :refinements, to: :class
 
+    def evaluating_object
+      obj = Object.new
+      constants = @source.global_constants.select do |c|
+        Object.const_defined? c.to_sym
+      end
+      constants.each { |c| obj.instance_eval "#{c} = ::#{c}" }
+      if @source.wrapping_modules.present?
+        ms = @source.wrapping_modules.map { |p| p.join(' ') }
+        s = [*ms, 'self', *Array.new(ms.length, 'end')].join(';')
+        obj = obj.instance_eval s
+      end
+      obj
+    end
+
     def with_refinements
       apply_refinements
-      yield Object.new
+      yield
     ensure
       clear_refinements
     end

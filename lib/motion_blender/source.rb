@@ -51,6 +51,11 @@ module MotionBlender
         end
     end
 
+    def child_at *args
+      i = args.shift
+      args.present? ? children[i].child_at(*args) : children[i]
+    end
+
     def root?
       parent.nil?
     end
@@ -70,7 +75,8 @@ module MotionBlender
         'line' => @line,
         'type' => @type.to_s,
         'method' => @method.try(:to_s),
-        'global_constants' => global_constants
+        'global_constants' => global_constants,
+        'wrapping_modules' => wrapping_modules
       }
     end
 
@@ -90,6 +96,17 @@ module MotionBlender
         end
       else
         children.map(&:find_global_constants)
+      end
+    end
+
+    def wrapping_modules
+      @wrapping_modules ||=
+        [*parent.try(:wrapping_modules), parent.try(:this_module)].compact
+    end
+
+    def this_module
+      if (type.module? || type.class?) && children.first.type.const?
+        [type.to_s, children.first.code]
       end
     end
   end
