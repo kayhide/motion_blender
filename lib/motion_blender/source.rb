@@ -1,4 +1,5 @@
 require 'parser/current'
+require 'motion_blender/flag_attribute'
 
 module MotionBlender
   class Source
@@ -12,9 +13,10 @@ module MotionBlender
       new(ast: ast)
     end
 
+    include FlagAttribute
+
     attr_reader :code, :file, :line, :parent, :type, :method, :ast
-    attr_reader :evaluated
-    alias_method :evaluated?, :evaluated
+    flag_attribute :evaluated
 
     def initialize attrs = {}
       @evaluated = false
@@ -34,8 +36,8 @@ module MotionBlender
       @method = @method.try(:to_sym)
     end
 
-    def evaluated!
-      @evaluated = true
+    def to_s
+      "#{file}:#{line}:in `#{method || type}'"
     end
 
     def children
