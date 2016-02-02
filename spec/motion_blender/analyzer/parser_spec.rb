@@ -67,7 +67,7 @@ module MotionBlender
 
         parser.parse
         expect(parser.requires.map(&:arg))
-          .to eq fixtures_dir.join('lib').children.map(&:to_s)
+          .to eq Dir[fixtures_dir.join('lib/*.rb').to_s]
       end
 
       it 'evals rescue clause' do

@@ -10,7 +10,7 @@ module MotionBlender
       include ActiveSupport::Callbacks
       define_callbacks :parse
 
-      attr_reader :file, :evaluators, :cache
+      attr_reader :file, :evaluators, :cache, :referring_constants
 
       def initialize file
         @file = file.to_s
@@ -18,17 +18,22 @@ module MotionBlender
       end
 
       def parse
-        srcs = cache.fetch do
+        cached = cache.fetch do
           run_callbacks :parse do
-            traverse(Source.parse_file(@file))
-            @evaluators.select(&:done?).map(&:source).map(&:attributes)
+            root = Source.parse_file(@file)
+            traverse(root)
+            {
+              sources: processed_sources.map(&:attributes),
+              referring_constants: root.referring_constants
+            }
           end
         end
-        if srcs && cache.hit?
-          srcs.each do |attrs|
+        if cached && cache.hit?
+          cached[:sources].each do |attrs|
             evaluate Source.new(attrs)
           end
         end
+        @referring_constants = cached[:referring_constants]
         self
       end
 
@@ -40,7 +45,7 @@ module MotionBlender
         if Collector.requirable?(source)
           evaluate source
         elsif Collector.acceptable?(source)
-          source.children.each { |src| traverse src }
+          source.children.compact.each { |src| traverse src }
         end
       end
 
@@ -53,8 +58,29 @@ module MotionBlender
         @evaluators.map(&:requires).flatten
       end
 
+      def processed_sources
+        @evaluators.select(&:done?).map(&:source)
+      end
+
       def last_trace
         @evaluators.last.try :trace
+      end
+
+      def autoloads_with autoloads
+        referring_constants.map do |mods, const|
+          key =
+            mods.length.downto(0)
+            .map { |i| [*mods.take(i), const].join('::') }
+            .find { |k| autoloads.key?(k) }
+          autoloads[key]
+        end.flatten.compact
+      end
+
+      def dependent_requires opts = {}
+        autoloads = opts[:autoloads]
+        reqs = requires.reject(&:autoload?)
+        reqs += autoloads_with(autoloads) if autoloads
+        reqs.uniq(&:file)
       end
     end
   end

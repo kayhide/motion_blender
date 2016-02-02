@@ -22,7 +22,18 @@ module MotionBlender
         circular = fixtures_dir.join('lib/circular.rb').to_s
 
         expect(subject.dependencies[src]).to eq [circular]
-        expect(subject.dependencies[circular]).to eq [circular]
+        expect(subject.dependencies[circular]).to eq nil
+      end
+
+      it 'captures autoloads and sets dependencies' do
+        src = fixtures_dir.join('autoload_loader.rb').to_s
+        subject.analyze src
+        hoge = fixtures_dir.join('lib/alpha/beta/hoge.rb').to_s
+        piyo = fixtures_dir.join('lib/alpha/beta/piyo.rb').to_s
+
+        expect(subject.dependencies[src]).to eq [hoge]
+        expect(subject.dependencies[hoge]).to eq [piyo]
+        expect(subject.dependencies[piyo]).to eq nil
       end
 
       it 'works with original' do
