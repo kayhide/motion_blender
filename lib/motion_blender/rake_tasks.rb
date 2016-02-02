@@ -3,6 +3,7 @@ require 'yaml'
 require 'motion_blender/config'
 require 'motion_blender/analyzer'
 require 'motion_blender/graph_maker'
+require 'motion_blender/dependency_graph'
 
 module MotionBlender
   class RakeTasks
@@ -21,6 +22,7 @@ module MotionBlender
 
     def apply
       analyzer = analyze
+      verify_dependencies analyzer.dependencies
       Motion::Project::App.setup do |app|
         new_files = analyzer.files - app.files
         app.exclude_from_detect_dependencies += new_files
@@ -41,6 +43,12 @@ module MotionBlender
       graph_maker.title = Motion::Project::App.config.name
       graph_maker.build
       Motion::Project::App.info('Create', graph_maker.output)
+    end
+
+    private
+
+    def verify_dependencies hash
+      DependencyGraph[hash].tsort
     end
   end
 end
