@@ -26,24 +26,39 @@ module MotionBlender
         src = fixtures_dir.join('autoload/flat_loader.rb').to_s
         parser = described_class.new(src)
 
-        parser.parse
-        expect(parser.requires.map(&:arg)).to eq %w(foo)
+        expect {
+          parser.parse
+        }.to change { parser.requires.count }.to(1)
+        req = parser.requires.last
+        expect(req).to be_autoload
+        expect(req.arg).to eq 'foo'
+        expect(req.autoload_const_name).to eq 'Foo'
       end
 
-      it 'captures Module#autoload for module' do
-        src = fixtures_dir.join('autoload/for_module_loader.rb').to_s
+      it 'captures Module#autoload wrapped in module' do
+        src = fixtures_dir.join('autoload/wrapped_loader.rb').to_s
         parser = described_class.new(src)
 
-        parser.parse
-        expect(parser.requires.map(&:arg).uniq).to eq %w(foo bar)
+        expect {
+          parser.parse
+        }.to change { parser.requires.count }.to(1)
+        req = parser.requires.last
+        expect(req).to be_autoload
+        expect(req.arg).to eq 'foo'
+        expect(req.autoload_const_name).to eq 'Alpha::Beta::Foo'
       end
 
-      it 'captures Module#autoload for class' do
-        src = fixtures_dir.join('autoload/for_class_loader.rb').to_s
+      it 'captures Module#autoload with receiver' do
+        src = fixtures_dir.join('autoload/with_receiver_loader.rb').to_s
         parser = described_class.new(src)
 
-        parser.parse
-        expect(parser.requires.map(&:arg).uniq).to eq %w(foo bar)
+        expect {
+          parser.parse
+        }.to change { parser.requires.count }.to(1)
+        req = parser.requires.last
+        expect(req).to be_autoload
+        expect(req.arg).to eq 'foo'
+        expect(req.autoload_const_name).to eq 'Alpha::Beta::Foo'
       end
 
       it 'captures requires in loop' do

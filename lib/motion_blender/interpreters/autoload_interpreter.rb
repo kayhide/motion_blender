@@ -5,8 +5,14 @@ module MotionBlender
     class AutoloadInterpreter < RequireInterpreter
       interprets :autoload
 
-      def interpret _, arg
-        super arg
+      def interpret const_name, arg
+        req = super arg
+        req.autoload_const_name =
+          if object.is_a? Module
+            [*object.name.sub(/^#<.+?>::/, ''), const_name].join('::')
+          else
+            const_name.to_s
+          end
       end
     end
 

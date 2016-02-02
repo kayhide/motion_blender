@@ -8,8 +8,10 @@ module MotionBlender
       interprets :require
 
       def interpret arg
-        find_require(arg) do |req|
+        req = find_require(arg)
+        if req
           requires << req
+          req
         end
       end
 

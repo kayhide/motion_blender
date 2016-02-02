@@ -16,8 +16,7 @@ module MotionBlender
         req.file = resolve_path req.arg
         return if excluded_file? req.file
 
-        yield req
-        true
+        req
       end
 
       def resolve_path arg

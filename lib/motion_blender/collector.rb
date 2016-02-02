@@ -41,10 +41,16 @@ module MotionBlender
 
     def collect_requires
       obj = evaluating_object
-      with_refinements do
-        obj.instance_eval(source.code, source.file, source.line)
-        requires
+      if obj.is_a? Module
+        with_refinements do
+          obj.module_eval(source.code, source.file, source.line)
+        end
+      else
+        with_refinements do
+          obj.instance_eval(source.code, source.file, source.line)
+        end
       end
+      requires
     end
 
     private
