@@ -1,8 +1,16 @@
 require 'parser/current'
 require 'motion_blender/flag_attribute'
+require 'motion_blender/source/wrapping_modules'
+require 'motion_blender/source/global_constants'
+require 'motion_blender/source/referring_constants'
 
 module MotionBlender
   class Source
+    include FlagAttribute
+    include WrappingModules
+    include GlobalConstants
+    include ReferringConstants
+
     def self.parse code, attrs = {}
       attrs[:ast] = ::Parser::CurrentRuby.parse(code)
       new(attrs)
@@ -12,8 +20,6 @@ module MotionBlender
       ast = ::Parser::CurrentRuby.parse_file(file)
       new(ast: ast)
     end
-
-    include FlagAttribute
 
     attr_reader :code, :file, :line, :parent, :type, :method, :ast
     flag_attribute :evaluated
@@ -42,13 +48,9 @@ module MotionBlender
 
     def children
       @children ||=
-        if @ast
-          @ast.children.grep(::Parser::AST::Node).map do |ast|
-            Source.new(ast: ast, parent: self)
-          end
-        else
-          []
-        end
+        @ast.try(:children).to_a
+        .select { |ast| ast.nil? || ast.is_a?(::Parser::AST::Node) }
+        .map { |ast| Source.new(ast: ast, parent: self) }
     end
 
     def child_at *args
@@ -68,6 +70,10 @@ module MotionBlender
       root? ? [self] : [self, *parent.ancestors]
     end
 
+    def like_module?
+      type.module? || type.class?
+    end
+
     def attributes
       {
         'code' => @code,
@@ -78,36 +84,6 @@ module MotionBlender
         'global_constants' => global_constants,
         'wrapping_modules' => wrapping_modules
       }
-    end
-
-    def global_constants
-      @global_constants ||=
-        if root?
-          Array.wrap(find_global_constants).flatten.compact.uniq
-        else
-          root.global_constants
-        end
-    end
-
-    def find_global_constants
-      if type.module? || type.class?
-        if children.first.type.const?
-          children.first.code.split('::', 2).first
-        end
-      else
-        children.map(&:find_global_constants)
-      end
-    end
-
-    def wrapping_modules
-      @wrapping_modules ||=
-        [*parent.try(:wrapping_modules), parent.try(:this_module)].compact
-    end
-
-    def this_module
-      if (type.module? || type.class?) && children.first.type.const?
-        [type.to_s, children.first.code]
-      end
     end
   end
 end

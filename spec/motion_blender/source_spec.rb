@@ -71,9 +71,83 @@ module MotionBlender
 
         expect(source.wrapping_modules).to eq []
         expect(source.child_at(1).wrapping_modules).to eq [%w(module Hoge)]
-        expect(source.child_at(1, 1).wrapping_modules)
+        expect(source.child_at(1, 2).wrapping_modules)
           .to eq [%w(module Hoge), %w(class Piyo)]
       end
+    end
+  end
+
+  describe '#referring_constants' do
+    it 'captures grounded constants' do
+      source = Source.parse(<<-EOS.strip_heredoc)
+        Hoge
+        Piyo
+      EOS
+
+      expect(source.referring_constants).to eq [[[], 'Hoge'], [[], 'Piyo']]
+    end
+
+    it 'captures module constants' do
+      source = Source.parse(<<-EOS.strip_heredoc)
+        module Hoge; end
+        class Piyo; end
+      EOS
+
+      expect(source.referring_constants).to eq [[[], 'Hoge'], [[], 'Piyo']]
+    end
+
+    it 'captures wrapped constants' do
+      source = Source.parse(<<-EOS.strip_heredoc)
+        module Alpha
+          module Beta
+            Hoge
+          end
+        end
+      EOS
+
+      expect(source.referring_constants)
+        .to eq [[[], 'Alpha'], [%w(Alpha), 'Beta'], [%w(Alpha Beta), 'Hoge']]
+    end
+
+    it 'captures connected modules' do
+      source = Source.parse(<<-EOS.strip_heredoc)
+        Hoge::Piyo::Fuga
+      EOS
+
+      expect(source.referring_constants)
+        .to eq [[[], 'Hoge'], [[], 'Hoge::Piyo'], [[], 'Hoge::Piyo::Fuga']]
+    end
+
+    it 'captures connected module on module definition' do
+      source = Source.parse(<<-EOS.strip_heredoc)
+        module Alpha
+          module Hoge::Piyo
+          end
+        end
+      EOS
+
+      expect(source.referring_constants)
+        .to eq [[[], 'Alpha'], [%w(Alpha), 'Hoge'], [%w(Alpha), 'Hoge::Piyo']]
+    end
+
+    it 'captures derived class base' do
+      source = Source.parse(<<-EOS.strip_heredoc)
+        module Alpha
+          class Hoge < Piyo
+          end
+        end
+      EOS
+
+      expect(source.referring_constants)
+        .to eq [[[], 'Alpha'], [%w(Alpha), 'Hoge'], [%w(Alpha), 'Piyo']]
+    end
+
+    it 'ignores defining constant' do
+      source = Source.parse(<<-EOS.strip_heredoc)
+        Alpha = :alpha
+      EOS
+
+      expect(source.referring_constants).to eq []
     end
   end
 end
