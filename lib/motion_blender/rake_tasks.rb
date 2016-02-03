@@ -2,6 +2,7 @@ require 'rake'
 require 'yaml'
 require 'motion_blender/config'
 require 'motion_blender/analyzer'
+require 'motion_blender/graph_maker'
 
 module MotionBlender
   class RakeTasks
@@ -33,6 +34,14 @@ module MotionBlender
       analyzer = analyze
       YAML.dump %w(files dependencies).map { |k| [k, analyzer.send(k)] }.to_h
     end
+
+    def graph options = {}
+      analyzer = analyze
+      graph_maker = GraphMaker.new analyzer.dependencies, options
+      graph_maker.title = Motion::Project::App.config.name
+      graph_maker.build
+      Motion::Project::App.info('Create', graph_maker.output)
+    end
   end
 end
 
@@ -47,6 +56,17 @@ namespace :motion_blender do
   desc 'Dump analyzed files and dependencies'
   task :dump do
     puts MotionBlender::RakeTasks.new.dump
+  end
+
+  options = [
+    'layout=dot',
+    'filter="^(some|any)_pattern"',
+    'output=graph.pdf'
+  ].join(', ')
+  desc "Create graph of dependencies (options: #{options})"
+  task :graph do
+    options = ENV.to_h.slice(*%w(layout filter output)).symbolize_keys
+    MotionBlender::RakeTasks.new.graph options
   end
 end
 

@@ -11,8 +11,8 @@ describe MotionBlender::RakeTasks do
   }
 
   let(:app) {
-    Struct.new(:files, :spec_files, :exclude_from_detect_dependencies)
-      .new([], [], []).tap do |app|
+    Struct.new(:name, :files, :spec_files, :exclude_from_detect_dependencies)
+      .new('MotionBlender Test', [], [], []).tap do |app|
       allow(app).to receive(:files_dependencies)
     end
   }
@@ -21,10 +21,13 @@ describe MotionBlender::RakeTasks do
     stub_const('Motion::Project::App', Module.new)
     allow(Motion::Project::App).to receive(:setup).and_yield(app)
     allow(Motion::Project::App).to receive(:config) { app }
+    allow(Motion::Project::App).to receive(:info)
+    allow(subject).to receive(:analyze) { analyzer }
   end
 
   describe '#analyze' do
     before do
+      allow(subject).to receive(:analyze).and_call_original
       allow(analyzer).to receive(:analyze)
     end
 
@@ -40,10 +43,6 @@ describe MotionBlender::RakeTasks do
   end
 
   describe '#apply' do
-    before do
-      allow(subject).to receive(:analyze) { analyzer }
-    end
-
     it 'calls analyze' do
       expect(subject).to receive(:analyze)
       subject.analyze
@@ -67,10 +66,6 @@ describe MotionBlender::RakeTasks do
   end
 
   describe '#dump' do
-    before do
-      allow(subject).to receive(:analyze) { analyzer }
-    end
-
     it 'calls analyze' do
       expect(subject).to receive(:analyze)
       subject.dump
@@ -90,14 +85,48 @@ describe MotionBlender::RakeTasks do
       EOS
     end
   end
+
+  describe '#graph' do
+    let(:dependencies) { { 'foo' => ['bar'] } }
+
+    let(:options) { { a: 1, b: 2 } }
+
+    before do
+      allow(analyzer).to receive(:dependencies) { dependencies }
+      allow_any_instance_of(MotionBlender::GraphMaker).to receive(:build)
+    end
+
+    it 'calls analyze' do
+      expect(subject).to receive(:analyze)
+      subject.graph
+    end
+
+    it 'creates GraphMaker with dependencies and options' do
+      expect(MotionBlender::GraphMaker)
+        .to receive(:new).with(dependencies, options).and_call_original
+      subject.graph options
+    end
+
+    it 'sets GraphMaker#title' do
+      graph_maker = MotionBlender::GraphMaker.new dependencies
+      allow(MotionBlender::GraphMaker).to receive(:new) { graph_maker }
+      expect(graph_maker).to receive(:title=).with('MotionBlender Test')
+      subject.graph
+    end
+
+    it 'calls GraphMaker#build' do
+      expect_any_instance_of(MotionBlender::GraphMaker).to receive(:build)
+      subject.graph
+    end
+  end
 end
 
 describe 'apply task' do
-  let(:task) { Rake::Task['motion_blender:apply'] }
+  subject { Rake::Task['motion_blender:apply'] }
 
   it 'calls MotionBlender::RakeTasks#apply' do
     expect_any_instance_of(MotionBlender::RakeTasks).to receive(:apply)
-    task.execute
+    subject.execute
   end
 
   it 'calls Motion::Project::App.info on parse' do
@@ -106,18 +135,39 @@ describe 'apply task' do
     allow(MotionBlender).to receive(:on_parse) { |&p| p.call parser }
     stub_const('Motion::Project::App', Module.new)
     expect(Motion::Project::App).to receive(:info).with('Analyze', 'foo')
-    task.execute
+    subject.execute
   end
 end
 
 describe 'dump task' do
-  let(:task) { Rake::Task['motion_blender:dump'] }
+  subject { Rake::Task['motion_blender:dump'] }
 
   it 'puts dumped yaml' do
     expect_any_instance_of(MotionBlender::RakeTasks)
       .to receive(:dump) { 'dumped yaml' }
     expect {
-      task.execute
+      subject.execute
     }.to output(/dumped yaml/).to_stdout
+  end
+end
+
+describe 'graph task' do
+  subject { Rake::Task['motion_blender:graph'] }
+
+  it 'calls MotionBlender::RakeTasks#graph' do
+    expect_any_instance_of(MotionBlender::RakeTasks).to receive(:graph)
+    subject.execute
+  end
+
+  it 'takes options from ENV' do
+    options = {
+      layout: 'dot',
+      filter: 'pattern',
+      output: 'garph.png'
+    }
+    stub_const('ENV', options.merge(dummy: 1).stringify_keys)
+    expect_any_instance_of(MotionBlender::RakeTasks)
+      .to receive(:graph).with(options)
+    subject.execute
   end
 end
