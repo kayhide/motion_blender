@@ -10,7 +10,7 @@ module MotionBlender
       @incepted_files = []
       @excepted_files = Set.new
       @motion_dirs = []
-      @builtin_features = Set.new %w(bigdecimal rational date thread)
+      @builtin_features = Set.new %w(bigdecimal rational date)
       @cache_dir = Pathname.new('build/analyze')
     end
   end
