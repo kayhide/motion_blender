@@ -12,7 +12,8 @@ module MotionBlender
     }
 
     let(:app) {
-      Struct.new(:name, :files, :spec_files, :exclude_from_detect_dependencies)
+      Struct
+        .new(:name, :files, :spec_files, :exclude_from_detect_dependencies)
         .new('MotionBlender Test', [], [], []).tap do |app|
         allow(app).to receive(:files_dependencies)
       end

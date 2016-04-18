@@ -9,7 +9,7 @@ module MotionBlender
 
       def interpret
         dir = MotionBlender.config.motion_dirs.find { |d| file.start_with? d }
-        fail 'not found in motion_dirs' unless dir
+        raise 'not found in motion_dirs' unless dir
         arg = Pathname.new(file).relative_path_from(Pathname.new(dir))
         @original = candidates_for(arg).find(&:file?).try(&:to_s)
       end

@@ -19,6 +19,11 @@ Metrics/ModuleLength:
 Metrics/AbcSize:
   Max: 25
 
+# Cop supports --auto-correct.
+Performance/RedundantBlockCall:
+  Exclude:
+    - 'motion/**/*'
+
 # Configuration parameters: EnforcedStyle, SupportedStyles, ProceduralMethods, FunctionalMethods, IgnoredMethods.
 Style/BlockDelimiters:
   Exclude:
@@ -73,7 +78,7 @@ Style/MultilineBlockLayout:
     - 'spec/**/*'
 
 # Cop supports --auto-correct.
-Style/SingleSpaceBeforeFirstArg:
+Style/SpaceBeforeFirstArg:
   Enabled: false
 
 # Cop supports --auto-correct.

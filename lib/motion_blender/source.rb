@@ -48,7 +48,8 @@ module MotionBlender
 
     def children
       @children ||=
-        @ast.try(:children).to_a
+        @ast
+        .try(:children).to_a
         .select { |ast| ast.nil? || ast.is_a?(::Parser::AST::Node) }
         .map { |ast| Source.new(ast: ast, parent: self) }
     end

@@ -21,7 +21,7 @@ module MotionBlender
 
       def resolve_path arg
         path = candidates(arg).find(&:file?)
-        fail LoadError, "not found `#{arg}'" unless path
+        raise LoadError, "not found `#{arg}'" unless path
         explicit_relative path
       end
 

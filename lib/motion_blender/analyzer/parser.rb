@@ -69,7 +69,8 @@ module MotionBlender
       def autoloads_with autoloads
         referring_constants.map do |mods, const|
           key =
-            mods.length.downto(0)
+            mods
+            .length.downto(0)
             .map { |i| [*mods.take(i), const].join('::') }
             .find { |k| autoloads.key?(k) }
           autoloads[key]

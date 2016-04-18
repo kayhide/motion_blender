@@ -64,7 +64,7 @@ module MotionBlender
       it 'works with if statement' do
         allow_any_instance_of(Require)
           .to receive(:file) do |req|
-          fail LoadError if req.arg == 'java'
+          raise LoadError if req.arg == 'java'
           req.arg
         end
 

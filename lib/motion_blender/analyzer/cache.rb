@@ -2,7 +2,7 @@ module MotionBlender
   class Analyzer
     class Cache
       attr_reader :file, :hit
-      alias_method :hit?, :hit
+      alias hit? hit
 
       def initialize file
         @file = Pathname.new(file)

@@ -6,9 +6,9 @@ module MotionBlender
       attr_reader :source
       attr_reader :trace, :requires
       attr_reader :dynamic
-      alias_method :dynamic?, :dynamic
+      alias dynamic? dynamic
       attr_reader :done
-      alias_method :done?, :done
+      alias done? done
 
       def initialize source
         @source = source
@@ -36,7 +36,7 @@ module MotionBlender
       def recover_from_error err
         @source = @source.parent
         @source = @source.parent if @source && @source.type.rescue?
-        fail LoadError, err.message unless @source
+        raise LoadError, err.message unless @source
         @dynamic = true
         run
       end
